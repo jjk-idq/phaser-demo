@@ -6,12 +6,14 @@ export class Demo1 extends Scene
     background: Phaser.GameObjects.Image;
     msg_text : Phaser.GameObjects.Text;
     exit_text: Phaser.GameObjects.Text;
-    player: Phaser.Physics.Arcade.Sprite;
-    cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    wKey: Phaser.Input.Keyboard.Key;
-    aKey: Phaser.Input.Keyboard.Key;
-    sKey: Phaser.Input.Keyboard.Key;
-    dKey: Phaser.Input.Keyboard.Key;
+    private player!: Phaser.Physics.Arcade.Sprite;
+    private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+    //wKey: Phaser.Input.Keyboard.Key;
+    //aKey: Phaser.Input.Keyboard.Key;
+    //sKey: Phaser.Input.Keyboard.Key;
+    //dKey: Phaser.Input.Keyboard.Key;
+    private wasd!: { [key: string]: Phaser.Input.Keyboard.Key };
+    private lastDirection: 'up' | 'down' | 'left' | 'right' = 'down';
 
     constructor ()
     {
@@ -20,9 +22,7 @@ export class Demo1 extends Scene
 
     preload()
     {
-        // Load the sprite sheet for the player
-        // Assuming you have a sprite sheet at 'assets/player.png' with frames 32x32
-        // For now, using logo.png as placeholder
+        // Load the sprite sheet for the player (https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator)
         this.load.spritesheet('player', 'assets/player.png',{ frameWidth: 64, frameHeight: 64 });
     }
 
@@ -52,13 +52,6 @@ export class Demo1 extends Scene
             this.scene.start('MainMenu');
         });
 
-        // Add player sprite
-        this.player = this.physics.add.sprite(512, 384, 'player');
-        this.player.setCollideWorldBounds(true);
-
-        // Set default standing frame (down-facing)
-        this.player.setFrame(16);
-
         // Create basic directional walk animations (8 frames per row)
         // Sprite sheet layout: row 0 = up, row 1 = left, row 2 = down, row 3 = right
         this.anims.create({
@@ -86,56 +79,63 @@ export class Demo1 extends Scene
             repeat: -1
         });
 
-        // Create cursor keys and WASD keys
-        this.cursors = this.input.keyboard.createCursorKeys();
-        this.wKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-        this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-        this.sKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-        this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        // Idle = first frame of each direction
+        this.anims.create({ key: 'idle-up',  frames: [{ key: 'player', frame: 0 }],  frameRate: 10 });
+        this.anims.create({ key: 'idle-left',  frames: [{ key: 'player', frame: 13 }],  frameRate: 10 });
+        this.anims.create({ key: 'idle-down', frames: [{ key: 'player', frame: 26 }],  frameRate: 10 });
+        this.anims.create({ key: 'idle-right',    frames: [{ key: 'player', frame: 39 }], frameRate: 10 });
+
+        const centerX = this.cameras.main.centerX;
+        const centerY = this.cameras.main.centerY;
+
+        this.player = this.physics.add.sprite(centerX, centerY, 'player', 0);
+        this.player.setCollideWorldBounds(true);
+        this.player.anims.play('idle-down');
+
+        // Input (arrows + WASD)
+        this.cursors = this.input.keyboard!.createCursorKeys();
+        this.wasd = this.input.keyboard!.addKeys('W,S,A,D') as any;
+
+
     }
 
     update()
     {
-        const isLeft = this.cursors.left.isDown || this.aKey.isDown;
-        const isRight = this.cursors.right.isDown || this.dKey.isDown;
-        const isUp = this.cursors.up.isDown || this.wKey.isDown;
-        const isDown = this.cursors.down.isDown || this.sKey.isDown;
+        const speed = 200;                    // ← change this to make player faster/slower
+        let vx = 0;
+        let vy = 0;
 
-        // Handle movement
-        if (isLeft)
-        {
-            this.player.setVelocityX(-160);
-            this.player.anims.play('walk-left', true);
-        }
-        else if (isRight)
-        {
-            this.player.setVelocityX(160);
-            this.player.anims.play('walk-right', true);
-        }
-        else
-        {
-            this.player.setVelocityX(0);
+        // === INPUT (checked every frame) ===
+        if (this.cursors.left.isDown || this.wasd.A.isDown) vx = -speed;
+        if (this.cursors.right.isDown || this.wasd.D.isDown) vx = speed;
+        if (this.cursors.up.isDown || this.wasd.W.isDown) vy = -speed;
+        if (this.cursors.down.isDown || this.wasd.S.isDown) vy = speed;
+
+        // === NORMALIZE DIAGONAL MOVEMENT (so you don't go faster diagonally) ===
+        if (vx !== 0 && vy !== 0) {
+            const norm = speed / Math.sqrt(2);   // ≈ 0.707
+            vx = vx > 0 ? norm : -norm;
+            vy = vy > 0 ? norm : -norm;
         }
 
-        if (isUp)
-        {
-            this.player.setVelocityY(-160);
-            this.player.anims.play('walk-up', true);
-        }
-        else if (isDown)
-        {
-            this.player.setVelocityY(160);
-            this.player.anims.play('walk-down', true);
-        }
-        else
-        {
-            this.player.setVelocityY(0);
-        }
+        this.player.setVelocity(vx, vy);
 
-        // If no direction keys are pressed, stop animation but keep last frame
-        if (!isLeft && !isRight && !isUp && !isDown)
-        {
-            this.player.anims.stop();
+        // === ANIMATION LOGIC (the heart of 4-directional movement) ===
+        if (vx === 0 && vy === 0) {
+            // Stopped → play idle in the last direction the player faced
+            this.player.anims.play(`idle-${this.lastDirection}`, true);
+        } else {
+            // Moving → decide which direction to animate
+            let newDir: 'up' | 'down' | 'left' | 'right';
+
+            if (Math.abs(vx) > Math.abs(vy)) {
+                newDir = vx < 0 ? 'left' : 'right';   // horizontal wins
+            } else {
+                newDir = vy < 0 ? 'up' : 'down';      // vertical wins
+            }
+
+            this.lastDirection = newDir;
+            this.player.anims.play(`walk-${newDir}`, true);
         }
     }
 }
