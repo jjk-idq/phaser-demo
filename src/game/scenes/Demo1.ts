@@ -10,6 +10,8 @@ export class Demo1 extends Scene
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private wasd!: { [key: string]: Phaser.Input.Keyboard.Key };
     private lastDirection: 'up' | 'down' | 'left' | 'right' = 'down';
+    private oldvx: number = 0;
+    private oldvy: number = 0;
 
     constructor ()
     {
@@ -21,6 +23,8 @@ export class Demo1 extends Scene
         // Load the sprite sheet for the player (https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator)
         this.load.spritesheet('player-walk', 'assets/player.png',{ frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('player-thrust', 'assets/thrust_oversize.png',{ frameWidth: 192, frameHeight: 192 });
+        // Load the spell effect sprite sheet (https://opengameart.org/content/music-magic-effect)
+        this.load.spritesheet('music', 'assets/music_orig1.png',{ frameWidth: 150, frameHeight: 150 });
     }
 
     create ()
@@ -101,6 +105,12 @@ export class Demo1 extends Scene
             frameRate: 14,
             repeat: -1
         });
+        this.anims.create({
+            key: 'cast',                    // e.g. swirling musical notes
+            frames: this.anims.generateFrameNumbers('music', { start: 0, end: 5 }),
+            frameRate: 8,
+            repeat: 0                       // play once
+        });
 
         // Idle = first frame of each direction
         this.anims.create({ key: 'idle-up',  frames: [{ key: 'player-walk', frame: 0 }],  frameRate: 10 });
@@ -124,7 +134,7 @@ export class Demo1 extends Scene
 
     update()
     {
-        const speed = 200;                    // ← change this to make player faster/slower
+        const speed = 200;
         let vx = 0;
         let vy = 0;
         let isThrusting = false;
@@ -134,6 +144,10 @@ export class Demo1 extends Scene
         if (this.cursors.right.isDown || this.wasd.D.isDown) vx = speed;
         if (this.cursors.up.isDown || this.wasd.W.isDown) vy = -speed;
         if (this.cursors.down.isDown || this.wasd.S.isDown) vy = speed;
+        if(vx !== 0 || vy !== 0){
+            this.oldvx = vx;
+            this.oldvy = vy;
+        }
 
         // === NORMALIZE DIAGONAL MOVEMENT (so you don't go faster diagonally) ===
         if (vx !== 0 && vy !== 0) {
@@ -143,21 +157,35 @@ export class Demo1 extends Scene
         }
 
         if(this.wasd.Q.isDown){
-            vx=0;
-            vy=0;
             isThrusting= true;
+            this.player.setVelocity(0, 0);
         }
         else{
             isThrusting= false;
-        }
-
-        this.player.setVelocity(vx, vy);
+            this.player.setVelocity(vx, vy);
+        }        
 
         // === ANIMATION LOGIC (the heart of 4-directional movement) ===
         if (vx === 0 && vy === 0) {
             if(isThrusting){
                 // Stopped → play thrust in the last direction the player faced
                 this.player.anims.play(`thrust-${this.lastDirection}`, true);
+                const spell = this.add.sprite( this.player.x + this.oldvx/10,  this.player.y +this.oldvy/10, 'magicEffect').setScale(0.5).setOrigin(0.5, 0.5);;
+                spell.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+                spell.play('cast');
+                this.tweens.add({
+                    targets: spell,
+                    x: spell.x + this.oldvx/3,              // ← change 120 to any distance you want
+                                                // +120 = right
+                                                // -120 = left
+                    y: spell.y + this.oldvy/3,               // optional upward drift (feels more "magical")
+                    duration: 600,                 // time in ms (0.6 seconds)
+                    ease: 'Sine.easeOut',          // smooth acceleration
+                    onComplete: () => spell.destroy()   // clean up when finished
+                });
+                spell.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+                    spell.destroy();
+                });
             }else{
                 // Stopped → play idle in the last direction the player faced
                 this.player.anims.play(`idle-${this.lastDirection}`, true);
@@ -173,7 +201,7 @@ export class Demo1 extends Scene
             }
 
             this.lastDirection = newDir;
-            this.player.anims.play(`thrust-${newDir}`, true);
+            this.player.anims.play(`walk-${newDir}`, true);
         }
     }
 }

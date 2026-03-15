@@ -36,7 +36,10 @@ const config: Phaser.Types.Core.GameConfig = {
         Demo5,
         MainGame,
         GameOver
-    ]
+    ],
+    render:{
+        pixelArt: true
+    }
 };
 
 const StartGame = (parent: string) => {
