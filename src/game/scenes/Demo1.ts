@@ -77,9 +77,7 @@ export class Demo1 extends Scene
         this.exit_text.setInteractive({ useHandCursor: true });
         this.exit_text.on('pointerdown', () => {
             this.scene.start('MainMenu');
-        });
-
-        
+        });        
 
         // Create basic directional walk animations (8 frames per row)
         // Sprite sheet layout: row 0 = up, row 1 = left, row 2 = down, row 3 = right
