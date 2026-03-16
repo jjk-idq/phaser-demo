@@ -14,6 +14,7 @@ export class Demo2 extends Scene
     exit_text: Phaser.GameObjects.Text;
     map: Phaser.Tilemaps.Tilemap;
     layer: Phaser.Tilemaps.TilemapLayer | null;
+    buttons: Phaser.GameObjects.Text[] = [];
 
     constructor ()
     {
@@ -44,6 +45,12 @@ export class Demo2 extends Scene
 
         // Add click to place tiles
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            // Check if clicked on any UI element
+            if (this.msg_text.getBounds().contains(pointer.x, pointer.y) ||
+                this.exit_text.getBounds().contains(pointer.x, pointer.y) ||
+                this.buttons.some(btn => btn.getBounds().contains(pointer.x, pointer.y))) {
+                return;
+            }
             const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
             const tileX = this.map.worldToTileX(worldPoint.x);
             const tileY = this.map.worldToTileY(worldPoint.y);
@@ -86,6 +93,7 @@ export class Demo2 extends Scene
                 this.time.delayedCall(100, () => button.setScale(1));
             });
 
+            this.buttons.push(button);
             return button;
         };
 
