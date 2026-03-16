@@ -19,6 +19,7 @@ export class Demo1 extends Scene
     private oldvx: number = 0;
     private oldvy: number = 0;
     private playerSex = 'male';
+    private isAttacking = false;
 
     constructor ()
     {
@@ -150,25 +151,25 @@ export class Demo1 extends Scene
             key: 'female-thrust-up',
             frames: this.anims.generateFrameNumbers('female-thrust', { start: 0, end: 5 }),
             frameRate: 14,
-            repeat: -1
+            repeat: 1
         });
         this.anims.create({
             key: 'female-thrust-left',
             frames: this.anims.generateFrameNumbers('female-thrust', { start: 6, end: 11 }),
             frameRate: 14,
-            repeat: -1
+            repeat: 1
         });
         this.anims.create({
             key: 'female-thrust-down',
             frames: this.anims.generateFrameNumbers('female-thrust', { start: 12, end: 17 }),
             frameRate: 14,
-            repeat: -1
+            repeat: 1
         });
         this.anims.create({
             key: 'female-thrust-right',
             frames: this.anims.generateFrameNumbers('female-thrust', { start: 18, end: 23 }),
             frameRate: 14,
-            repeat: -1
+            repeat: 1
         });
         // commen magic
         this.anims.create({
@@ -244,7 +245,6 @@ export class Demo1 extends Scene
         const speed = 200;
         let vx = 0;
         let vy = 0;
-        let isThrusting = false;
 
         // === INPUT (checked every frame) ===
         if (this.cursors.left.isDown || this.wasd.A.isDown) vx = -speed;
@@ -263,54 +263,60 @@ export class Demo1 extends Scene
             vy = vy > 0 ? norm : -norm;
         }
 
-        if(this.wasd.Q.isDown){
-            isThrusting= true;
+        // === ATTACK INPUT ===
+        if (Phaser.Input.Keyboard.JustDown(this.wasd.Q) && !this.isAttacking) {
+            this.isAttacking = true;
             this.player.setVelocity(0, 0);
-        }
-        else{
-            isThrusting= false;
+            
+            // Play thrust animation
+            this.player.anims.play(`${this.playerSex}-thrust-${this.lastDirection}`, true);
+            
+            // Create spell effect
+            const spell = this.add.sprite(this.player.x + this.oldvx/10, this.player.y + this.oldvy/10, 'music').setScale(0.5).setOrigin(0.5, 0.5);
+            spell.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+            spell.play('cast');
+            this.tweens.add({
+                targets: spell,
+                x: spell.x + this.oldvx/3,
+                y: spell.y + this.oldvy/3,
+                duration: 600,
+                ease: 'Sine.easeOut',
+                onComplete: () => spell.destroy()
+            });
+            spell.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+                spell.destroy();
+            });
+            
+            // Reset attacking flag when thrust animation completes
+            this.player.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+                this.isAttacking = false;
+            });
+        } else if (!this.isAttacking) {
             this.player.setVelocity(vx, vy);
-        }        
+        }
 
         // === ANIMATION LOGIC (the heart of 4-directional movement) ===
         if (vx === 0 && vy === 0) {
-            if(isThrusting){
-                // Stopped → play thrust in the last direction the player faced
-                this.player.anims.play(`${this.playerSex}-thrust-${this.lastDirection}`, true);
-                
-                const spell = this.add.sprite( this.player.x + this.oldvx/10,  this.player.y +this.oldvy/10, 'magicEffect').setScale(0.5).setOrigin(0.5, 0.5);;
-                spell.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
-                spell.play('cast');
-                this.tweens.add({
-                    targets: spell,
-                    x: spell.x + this.oldvx/3,              // ← change 120 to any distance you want
-                                                // +120 = right
-                                                // -120 = left
-                    y: spell.y + this.oldvy/3,               // optional upward drift (feels more "magical")
-                    duration: 600,                 // time in ms (0.6 seconds)
-                    ease: 'Sine.easeOut',          // smooth acceleration
-                    onComplete: () => spell.destroy()   // clean up when finished
-                });
-                spell.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-                    spell.destroy();
-                });
-                
-            }else{
+            if (this.isAttacking) {
+                // Attacking - animation already playing
+            } else {
                 // Stopped → play idle in the last direction the player faced
                 this.player.anims.play(`${this.playerSex}-idle-${this.lastDirection}`, true);
             }
         } else {
-            // Moving → decide which direction to animate
-            let newDir: 'up' | 'down' | 'left' | 'right';
+            if (!this.isAttacking) {
+                // Moving → decide which direction to animate
+                let newDir: 'up' | 'down' | 'left' | 'right';
 
-            if (Math.abs(vx) > Math.abs(vy)) {
-                newDir = vx < 0 ? 'left' : 'right';   // horizontal wins
-            } else {
-                newDir = vy < 0 ? 'up' : 'down';      // vertical wins
+                if (Math.abs(vx) > Math.abs(vy)) {
+                    newDir = vx < 0 ? 'left' : 'right';   // horizontal wins
+                } else {
+                    newDir = vy < 0 ? 'up' : 'down';      // vertical wins
+                }
+
+                this.lastDirection = newDir;
+                this.player.anims.play(`${this.playerSex}-walk-${newDir}`, true);
             }
-
-            this.lastDirection = newDir;
-            this.player.anims.play(`${this.playerSex}-walk-${newDir}`, true);
         }
     }
 }
