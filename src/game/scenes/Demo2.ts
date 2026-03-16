@@ -119,7 +119,7 @@ export class Demo2 extends Scene
         this.player.anims.play('player-idle-down');
 
         // Make camera follow the player
-        this.camera.startFollow(this.player);
+        this.camera.startFollow(this.player, true, 0.1, 0.1);
 
         // Input (arrows + WASD)
         this.wasd = this.input.keyboard!.addKeys('W,S,A,D') as any;
