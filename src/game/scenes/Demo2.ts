@@ -177,6 +177,10 @@ export class Demo2 extends Scene
         this.anims.create({ key: 'player-idle-right',    frames: [{ key: 'player-walk', frame: 39 }], frameRate: 10 });
         
         this.player = this.physics.add.sprite(centerX, centerY, 'player-walk', 0);
+        // Ensure player renders above tiles while walking on them
+        this.layer.setDepth(0);
+        this.player.setDepth(1);
+
         //this.player.setCollideWorldBounds(true);
         this.player.anims.play('player-idle-down');
 
@@ -310,7 +314,7 @@ export class Demo2 extends Scene
             return;
         }
         if(this.playerIsFaling){
-            this.playerFallSpeed += 10;
+            this.playerFallSpeed += 50;
             vy= this.playerFallSpeed;
             this.player.setVelocity(0, vy);
             //Test is player is fallen completely out of the screen
@@ -366,6 +370,9 @@ export class Demo2 extends Scene
             this.playerIsDead = true;
         }
         
+        // Ensure player renders behind tiles while falling, and above tiles while walking.
+        this.player.setDepth(this.playerIsFaling ? -1 : 1);
+
         // Animation
         if (this.playerIsFaling) {
             this.player.anims.play('player-jump', true);
