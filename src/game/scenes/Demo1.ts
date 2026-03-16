@@ -28,10 +28,6 @@ export class Demo1 extends Scene
     preload()
     {
         // Load the sprite sheet for the player (https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator)
-        this.load.spritesheet('player-walk', 'assets/player.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('player-thrust', 'assets/thrust_oversize.png',{ frameWidth: 192, frameHeight: 192 });
-
-        
         this.load.spritesheet('male-walk', 'assets/male-armor-sword-walk.png',{ frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('male-thrust', 'assets/male-armor-sword-thrust128.png',{ frameWidth: 128, frameHeight: 128 });        
         this.load.spritesheet('female-walk', 'assets/female-basic-sword-walk.png',{ frameWidth: 64, frameHeight: 64 });
@@ -72,31 +68,6 @@ export class Demo1 extends Scene
 
         // Create basic directional walk animations (8 frames per row)
         // Sprite sheet layout: row 0 = up, row 1 = left, row 2 = down, row 3 = right
-        //dummy
-        this.anims.create({
-            key: 'walk-up',
-            frames: this.anims.generateFrameNumbers('player-walk', { start: 0, end: 7 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: 'walk-left',
-            frames: this.anims.generateFrameNumbers('player-walk', { start: 13, end: 20 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: 'walk-down',
-            frames: this.anims.generateFrameNumbers('player-walk', { start: 26, end: 33 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        this.anims.create({
-            key: 'walk-right',
-            frames: this.anims.generateFrameNumbers('player-walk', { start: 39, end: 46 }),
-            frameRate: 14,
-            repeat: -1
-        });
         //male-walk
         this.anims.create({
             key: 'male-walk-up',
@@ -149,31 +120,6 @@ export class Demo1 extends Scene
         });
         // Create basic directional attack animations (8 frames per row)
         // Sprite sheet layout: row 0 = up, row 1 = left, row 2 = down, row 3 = right
-        //dummy
-        this.anims.create({
-            key: 'thrust-up',
-            frames: this.anims.generateFrameNumbers('player-thrust', { start: 0, end: 7 }),
-            frameRate: 14,
-            repeat: -1
-        });
-        this.anims.create({
-            key: 'thrust-left',
-            frames: this.anims.generateFrameNumbers('player-thrust', { start: 8, end: 15 }),
-            frameRate: 14,
-            repeat: -1
-        });
-        this.anims.create({
-            key: 'thrust-down',
-            frames: this.anims.generateFrameNumbers('player-thrust', { start: 16, end: 23 }),
-            frameRate: 14,
-            repeat: -1
-        });
-        this.anims.create({
-            key: 'thrust-right',
-            frames: this.anims.generateFrameNumbers('player-thrust', { start: 24, end: 31 }),
-            frameRate: 14,
-            repeat: 1
-        });
         //male-thrust
         this.anims.create({
             key: 'male-thrust-up',
@@ -233,11 +179,6 @@ export class Demo1 extends Scene
         });
 
         // Idle = first frame of each direction
-        //dummy
-        this.anims.create({ key: 'idle-up',  frames: [{ key: 'player-walk', frame: 0 }],  frameRate: 10 });
-        this.anims.create({ key: 'idle-left',  frames: [{ key: 'player-walk', frame: 13 }],  frameRate: 10 });
-        this.anims.create({ key: 'idle-down', frames: [{ key: 'player-walk', frame: 26 }],  frameRate: 10 });
-        this.anims.create({ key: 'idle-right',    frames: [{ key: 'player-walk', frame: 39 }], frameRate: 10 });
         //male
         this.anims.create({ key: 'male-idle-up',  frames: [{ key: 'male-walk', frame: 0 }],  frameRate: 10 });
         this.anims.create({ key: 'male-idle-left',  frames: [{ key: 'male-walk', frame: 13 }],  frameRate: 10 });
