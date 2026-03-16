@@ -11,6 +11,7 @@ export class Demo2 extends Scene
     camera: Phaser.Cameras.Scene2D.Camera;
     //background: Phaser.GameObjects.Image;
     msg_text : Phaser.GameObjects.Text;
+    debug_text : Phaser.GameObjects.Text;
     exit_text: Phaser.GameObjects.Text;
     map: Phaser.Tilemaps.Tilemap;
     layer: Phaser.Tilemaps.TilemapLayer | null;
@@ -44,7 +45,7 @@ export class Demo2 extends Scene
         const centerY = this.cameras.main.centerY;
 
         // Create tilemap
-        this.map = this.make.tilemap({ width: 16, height: 12, tileWidth: 64, tileHeight: 64 });
+        this.map = this.make.tilemap({ width: 100, height: 100, tileWidth: 64, tileHeight: 64 });
         const tileset = this.map.addTilesetImage('tilemap9', 'tilemap9', 64, 64, 0, 0);
         if (!tileset) {
             console.error('Failed to load tileset');
@@ -70,8 +71,7 @@ export class Demo2 extends Scene
         // Add click to place tiles
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             // Check if clicked on any UI element
-            if (this.msg_text.getBounds().contains(pointer.x, pointer.y) ||
-                this.exit_text.getBounds().contains(pointer.x, pointer.y) ||
+            if (this.exit_text.getBounds().contains(pointer.x, pointer.y) ||
                 this.buttons.some(btn => btn.getBounds().contains(pointer.x, pointer.y))) {
                 return;
             }
@@ -79,6 +79,20 @@ export class Demo2 extends Scene
             const tileX = this.map.worldToTileX(worldPoint.x);
             const tileY = this.map.worldToTileY(worldPoint.y);
             if (tileX !== null && tileY !== null) {
+                // Expand map if necessary
+                let expanded = false;
+                if (tileX >= this.map.width) {
+                    this.map.width = tileX + 1;
+                    expanded = true;
+                }
+                if (tileY >= this.map.height) {
+                    this.map.height = tileY + 1;
+                    expanded = true;
+                }
+                if (expanded) {
+                    this.layer!.setSize(this.map.width, this.map.height);
+                }
+
                 const existingTile = this.layer!.getTileAt(tileX, tileY);
                 if (!existingTile || existingTile.index === -1) {
                     const tileIndex = Phaser.Math.Between(0, 8);
@@ -94,6 +108,14 @@ export class Demo2 extends Scene
         });
         this.msg_text.setOrigin(0);
         this.msg_text.setScrollFactor(0);
+
+        this.debug_text = this.add.text(0, centerY*2-150, 'Debug Info', {
+            fontFamily: 'Arial', fontSize: 18, color: '#ffffff',
+            stroke: '#000000', strokeThickness: 2,
+            align: 'left'
+        });
+        this.debug_text.setOrigin(0);
+        this.debug_text.setScrollFactor(0);
 
         // Create basic directional walk animations (8 frames per row)
         // Sprite sheet layout: row 0 = up, row 1 = left, row 2 = down, row 3 = right
@@ -203,16 +225,45 @@ export class Demo2 extends Scene
 
             const data = tiles.map(tile => ({ x: tile.x, y: tile.y, index: tile.index }));
 
-            localStorage.setItem('demo2_tiles', JSON.stringify(data));
+            const saveData = {
+                width: this.map.width,
+                height: this.map.height,
+                tiles: data
+            };
+
+            localStorage.setItem('demo2_tiles', JSON.stringify(saveData));
 
         });
         createButton(0 ,1, 'Load', () => {
 
-            const data = JSON.parse(localStorage.getItem('demo2_tiles') || '[]');
+            const saveData = JSON.parse(localStorage.getItem('demo2_tiles') || '{}');
+
+            if (!saveData.tiles) return; // No data
+
+            // Expand map to at least the saved size
+            if (saveData.width > this.map.width || saveData.height > this.map.height) {
+                this.map.width = Math.max(this.map.width, saveData.width);
+                this.map.height = Math.max(this.map.height, saveData.height);
+                this.layer!.setSize(this.map.width, this.map.height);
+            }
+
+            // Also check if any tile is beyond current size (though shouldn't happen)
+            let maxX = saveData.width - 1;
+            let maxY = saveData.height - 1;
+            saveData.tiles.forEach((tileData: {x: number, y: number, index: number}) => {
+                if (tileData.x > maxX) maxX = tileData.x;
+                if (tileData.y > maxY) maxY = tileData.y;
+            });
+
+            if (maxX >= this.map.width || maxY >= this.map.height) {
+                this.map.width = Math.max(this.map.width, maxX + 1);
+                this.map.height = Math.max(this.map.height, maxY + 1);
+                this.layer!.setSize(this.map.width, this.map.height);
+            }
 
             this.layer!.fill(-1);
 
-            data.forEach((tileData: {x: number, y: number, index: number}) => {
+            saveData.tiles.forEach((tileData: {x: number, y: number, index: number}) => {
 
                 this.layer!.putTileAt(tileData.index, tileData.x, tileData.y);
 
@@ -245,7 +296,12 @@ export class Demo2 extends Scene
         if (this.wasd.S.isDown) vy = speed;
 
         // Check if player is on a tile
-        const tileBelow = this.layer!.getTileAtWorldXY(this.player.x, this.player.y + this.player.height / 2);
+        const tileBelow = this.layer!.getTileAtWorldXY(this.player.x + this.player.width / 2, this.player.y + this.player.height / 2);
+        this.debug_text.setText(`Player Pos: (${this.player.x.toFixed(1)}, ${this.player.y.toFixed(1)})\n` +
+            `Tile Below: ${tileBelow ? `(${tileBelow.x}, ${tileBelow.y}) idx:${tileBelow.index}` : 'None'}\n` +
+            `Falling: ${this.isFalling}\n` +
+            `Use WASD to move. Click to place tiles.`
+        );
         const wasFalling = this.isFalling;
         if (tileBelow && tileBelow.index !== -1) {
             this.isFalling = false;
@@ -260,7 +316,7 @@ export class Demo2 extends Scene
             this.playerCollider.destroy();
             this.player.setCollideWorldBounds(false);
             this.camera.stopFollow();
-            this.time.delayedCall(5000, () => {
+            this.time.delayedCall(3000, () => {
                 this.gameOverText.setVisible(true);
             });
             this.gameOverShown = true;
