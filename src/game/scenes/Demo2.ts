@@ -6,18 +6,19 @@ const COLORS = {
     buttonHoverBg: '#555555',
 };
 
-export class Demo2 extends Scene
-{
+export class Demo2 extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     //background: Phaser.GameObjects.Image;
-    msg_text : Phaser.GameObjects.Text;
-    debug_text : Phaser.GameObjects.Text;
+    msg_text: Phaser.GameObjects.Text;
+    debug_text: Phaser.GameObjects.Text;
     exit_text: Phaser.GameObjects.Text;
     map: Phaser.Tilemaps.Tilemap;
     layer: Phaser.Tilemaps.TilemapLayer | null;
     buttons: Phaser.GameObjects.Text[] = [];
     private player!: Phaser.Physics.Arcade.Sprite;
     private wasd!: { [key: string]: Phaser.Input.Keyboard.Key };
+    private keyQ!: Phaser.Input.Keyboard.Key;
+    private lastMoveDir = { x: 0, y: 1 };
     private playerCollider!: Phaser.Physics.Arcade.Collider;
     private gameOverText!: Phaser.GameObjects.Text;
     private lastPointerX: number = 0;
@@ -25,24 +26,21 @@ export class Demo2 extends Scene
     private gameHasEnded: boolean = false;
     private playerIsFaling: boolean = false;
     private playerIsDead: boolean = false;
-    private playerFallSpeed: number =0;
+    private playerFallSpeed: number = 0;
 
-    constructor ()
-    {
+    constructor() {
         super('Demo2');
     }
 
-    preload()
-    {
+    preload() {
         // Load the sprite sheet for the player (https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator)
-        this.load.spritesheet('player-walk', 'assets/male-basic-none-walk.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('player-jump', 'assets/player-jump.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('player-death', 'assets/player-death.png',{ frameWidth: 64, frameHeight: 64 });
-        
+        this.load.spritesheet('player-walk', 'assets/male-basic-none-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('player-jump', 'assets/player-jump.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('player-death', 'assets/player-death.png', { frameWidth: 64, frameHeight: 64 });
+
     }
 
-    create ()
-    {
+    create() {
         this.camera = this.cameras.main;
         //this.camera.setBackgroundColor(0x00ff00);
         const centerX = this.cameras.main.centerX;
@@ -55,7 +53,7 @@ export class Demo2 extends Scene
         this.playerFallSpeed = 0;
 
         // Create tilemap
-        this.map = this.make.tilemap({ width: 100, height: 100, tileWidth: 64, tileHeight: 64 });
+        this.map = this.make.tilemap({ width: 10, height: 10, tileWidth: 64, tileHeight: 64 });
         const tileset = this.map.addTilesetImage('tilemap9', 'tilemap9', 64, 64, 0, 0);
         if (!tileset) {
             console.error('Failed to load tileset');
@@ -121,7 +119,7 @@ export class Demo2 extends Scene
         this.msg_text.setOrigin(0);
         this.msg_text.setScrollFactor(0);
 
-        this.debug_text = this.add.text(0, centerY*2-150, 'Debug Info', {
+        this.debug_text = this.add.text(0, centerY * 2 - 150, 'Debug Info', {
             fontFamily: 'Arial', fontSize: 18, color: '#ffffff',
             stroke: '#000000', strokeThickness: 2,
             align: 'left'
@@ -171,11 +169,11 @@ export class Demo2 extends Scene
             repeat: -1
         });
         // Idle = first frame of each direction
-        this.anims.create({ key: 'player-idle-up',  frames: [{ key: 'player-walk', frame: 0 }],  frameRate: 10 });
-        this.anims.create({ key: 'player-idle-left',  frames: [{ key: 'player-walk', frame: 13 }],  frameRate: 10 });
-        this.anims.create({ key: 'player-idle-down', frames: [{ key: 'player-walk', frame: 26 }],  frameRate: 10 });
-        this.anims.create({ key: 'player-idle-right',    frames: [{ key: 'player-walk', frame: 39 }], frameRate: 10 });
-        
+        this.anims.create({ key: 'player-idle-up', frames: [{ key: 'player-walk', frame: 0 }], frameRate: 10 });
+        this.anims.create({ key: 'player-idle-left', frames: [{ key: 'player-walk', frame: 13 }], frameRate: 10 });
+        this.anims.create({ key: 'player-idle-down', frames: [{ key: 'player-walk', frame: 26 }], frameRate: 10 });
+        this.anims.create({ key: 'player-idle-right', frames: [{ key: 'player-walk', frame: 39 }], frameRate: 10 });
+
         this.player = this.physics.add.sprite(centerX, centerY, 'player-walk', 0);
         // Ensure player renders above tiles while walking on them
         this.layer.setDepth(0);
@@ -203,10 +201,11 @@ export class Demo2 extends Scene
 
         // Input (arrows + WASD)
         this.wasd = this.input.keyboard!.addKeys('W,S,A,D') as any;
+        this.keyQ = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
 
         // Helper function to create a nice button
         const createButton = (y: number, x: number, text: string, callback: () => void) => {
-            const button = this.add.text(centerX + 220 + x*150, 50 +  y*60, text, {
+            const button = this.add.text(centerX + 220 + x * 150, 50 + y * 60, text, {
                 fontFamily: 'Arial',
                 fontSize: '22px',
                 color: COLORS.buttonText,
@@ -235,7 +234,7 @@ export class Demo2 extends Scene
             return button;
         };
 
-        createButton(0 ,0, 'Save', () => {
+        createButton(0, 0, 'Save', () => {
 
             const tiles = this.layer!.getTilesWithin(0, 0, this.map.width, this.map.height).filter(tile => tile.index !== -1);
 
@@ -250,7 +249,7 @@ export class Demo2 extends Scene
             localStorage.setItem('demo2_tiles', JSON.stringify(saveData));
 
         });
-        createButton(0 ,1, 'Load', () => {
+        createButton(0, 1, 'Load', () => {
 
             const saveData = JSON.parse(localStorage.getItem('demo2_tiles') || '{}');
 
@@ -266,7 +265,7 @@ export class Demo2 extends Scene
             // Also check if any tile is beyond current size (though shouldn't happen)
             let maxX = saveData.width - 1;
             let maxY = saveData.height - 1;
-            saveData.tiles.forEach((tileData: {x: number, y: number, index: number}) => {
+            saveData.tiles.forEach((tileData: { x: number, y: number, index: number }) => {
                 if (tileData.x > maxX) maxX = tileData.x;
                 if (tileData.y > maxY) maxY = tileData.y;
             });
@@ -279,17 +278,17 @@ export class Demo2 extends Scene
 
             this.layer!.fill(-1);
 
-            saveData.tiles.forEach((tileData: {x: number, y: number, index: number}) => {
+            saveData.tiles.forEach((tileData: { x: number, y: number, index: number }) => {
 
                 this.layer!.putTileAt(tileData.index, tileData.x, tileData.y);
 
             });
 
         });
-        createButton(0,-1 ,'Restart', () => {
+        createButton(0, -1, 'Restart', () => {
             this.scene.restart();
         });
-        
+
         this.exit_text = this.add.text(900, 700, 'Exit', {
             fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
             stroke: '#000000', strokeThickness: 8,
@@ -303,8 +302,7 @@ export class Demo2 extends Scene
         });
     }
 
-    update()
-    {
+    update() {
         const speed = 150;
         let vx = 0;
         let vy = 0;
@@ -313,12 +311,12 @@ export class Demo2 extends Scene
             this.player.setVelocity(0, 0);
             return;
         }
-        if(this.playerIsFaling){
+        if (this.playerIsFaling) {
             this.playerFallSpeed += 40;
-            vy= this.playerFallSpeed;
+            vy = this.playerFallSpeed;
             this.player.setVelocity(0, vy);
             //Test is player is fallen completely out of the screen
-            if(this.player.y > this.cameras.main.height + this.player.height){
+            if (this.player.y > this.cameras.main.height + this.player.height) {
                 this.gameHasEnded = true;
                 this.playerIsFaling = false;
                 this.playerFallSpeed = 0;
@@ -329,30 +327,74 @@ export class Demo2 extends Scene
             }
         }
 
-        
+
         // === INPUT (checked every frame) ===
         if (this.wasd.A.isDown) vx = -speed;
         if (this.wasd.D.isDown) vx = speed;
         if (this.wasd.W.isDown) vy = -speed;
         if (this.wasd.S.isDown) vy = speed;
 
+        // Track last move direction so we know where to place the tile when Q is pressed
+        if (vx !== 0 || vy !== 0) {
+            if (Math.abs(vx) > Math.abs(vy)) {
+                this.lastMoveDir.x = Math.sign(vx);
+                this.lastMoveDir.y = 0;
+            } else {
+                this.lastMoveDir.x = 0;
+                this.lastMoveDir.y = Math.sign(vy);
+            }
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this.keyQ)) {
+            if (!this.playerIsDead && !this.playerIsFaling) {
+                const playerTile = this.map.worldToTileXY(this.player.x, this.player.y);
+                if(playerTile)
+                {
+                    const targetTileX = playerTile.x + this.lastMoveDir.x;
+                    const targetTileY = playerTile.y + this.lastMoveDir.y;
+                    // Only place within 1 tile (adjacent) and if the spot is empty
+                    if (Math.abs(targetTileX - playerTile.x) <= 1 && Math.abs(targetTileY - playerTile.y) <= 1) {
+                        let expanded = false;
+                        if (targetTileX >= 0 && targetTileY >= 0) {
+                            if (targetTileX >= this.map.width) {
+                                this.map.width = targetTileX + 1;
+                                expanded = true;
+                            }
+                            if (targetTileY >= this.map.height) {
+                                this.map.height = targetTileY + 1;
+                                expanded = true;
+                            }
+                            if (expanded) {
+                                this.layer!.setSize(this.map.width, this.map.height);
+                            }
+
+                            const existingTile = this.layer!.getTileAt(targetTileX, targetTileY);
+                            if (!existingTile || existingTile.index === -1) {
+                                const tileIndex = 2;
+                                this.layer!.putTileAt(tileIndex, targetTileX, targetTileY);
+                            }
+                        }
+                    }
+                }                
+            }
+        }
+
         // Check if player is on a tile
         const tileBelow = this.layer!.getTileAtWorldXY(this.player.x, this.player.y + this.player.height / 2);
         this.debug_text.setText(`Player Pos: (${this.player.x.toFixed(1)}, ${this.player.y.toFixed(1)})\n` +
             `Tile Below: ${tileBelow ? `(${tileBelow.x}, ${tileBelow.y}) idx:${tileBelow.index}` : 'None'}\n` +
             `Falling: ${this.playerIsFaling} Fall Speed: ${this.playerFallSpeed} GameEnded: ${this.gameHasEnded}\n` +
-            `Vx: ${vx}, Vy: ${vy}\n` +            
+            `Vx: ${vx}, Vy: ${vy}\n` +
             `last click x: ${this.lastPointerX}, y: ${this.lastPointerY}\n` +
-            `Use WASD to move. Click to place tiles.`
+            `Use WASD to move. Q or Click to place tiles.`
         );
-        if(!this.playerIsFaling && !this.playerIsDead)
-        {
+        if (!this.playerIsFaling && !this.playerIsDead) {
             if (tileBelow && tileBelow.index !== -1) {
                 this.playerIsFaling = false;
                 this.player.setVelocity(vx, vy);
             } else {
                 this.playerIsFaling = true;
-                this.player.setVelocity(vx/2, vy -100); // fall down
+                this.player.setVelocity(vx / 2, vy - 100); // fall down
             }
         }
 
@@ -369,7 +411,7 @@ export class Demo2 extends Scene
             });
             this.playerIsDead = true;
         }
-        
+
         // Ensure player renders behind tiles while falling, and above tiles while walking.
         this.player.setDepth(this.playerIsFaling ? -1 : 1);
 

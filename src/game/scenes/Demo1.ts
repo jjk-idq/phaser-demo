@@ -9,11 +9,10 @@ const COLORS = {
     buttonHoverBg: '#555555',
 };
 
-export class Demo1 extends Scene
-{
+export class Demo1 extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     background: Phaser.GameObjects.Image;
-    msg_text : Phaser.GameObjects.Text;
+    msg_text: Phaser.GameObjects.Text;
     exit_text: Phaser.GameObjects.Text;
     private player!: Phaser.Physics.Arcade.Sprite;
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -26,38 +25,35 @@ export class Demo1 extends Scene
     private playerWeapon = 'staff';
     private isAttacking = false;
 
-    constructor ()
-    {
+    constructor() {
         super('Demo1');
     }
 
-    preload()
-    {
+    preload() {
         // Load the sprite sheet for the player (https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator)
-        this.load.spritesheet('male-basic-sword-walk', 'assets/male-basic-sword-walk.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('male-basic-sword-thrust', 'assets/male-basic-sword-thrust128.png',{ frameWidth: 128, frameHeight: 128 });     
-        this.load.spritesheet('male-basic-staff-walk', 'assets/male-basic-staff-walk.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('male-basic-staff-thrust', 'assets/male-basic-staff-thrust.png',{ frameWidth: 64, frameHeight: 64 });      
-        this.load.spritesheet('male-armor-sword-walk', 'assets/male-armor-sword-walk.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('male-armor-sword-thrust', 'assets/male-armor-sword-thrust128.png',{ frameWidth: 128, frameHeight: 128 });     
-        this.load.spritesheet('male-armor-staff-walk', 'assets/male-armor-staff-walk.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('male-armor-staff-thrust', 'assets/male-armor-staff-thrust.png',{ frameWidth: 64, frameHeight: 64 });        
-        this.load.spritesheet('female-basic-sword-walk', 'assets/female-basic-sword-walk.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('female-basic-sword-thrust', 'assets/female-basic-sword-thrust128.png',{ frameWidth: 128, frameHeight: 128 });    
-        this.load.spritesheet('female-basic-staff-walk', 'assets/female-basic-staff-walk.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('female-basic-staff-thrust', 'assets/female-basic-staff-thrust.png',{ frameWidth: 64, frameHeight: 64 });    
-        this.load.spritesheet('female-armor-sword-walk', 'assets/female-armor-sword-walk.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('female-armor-sword-thrust', 'assets/female-armor-sword-thrust128.png',{ frameWidth: 128, frameHeight: 128 });    
-        this.load.spritesheet('female-armor-staff-walk', 'assets/female-armor-staff-walk.png',{ frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('female-armor-staff-thrust', 'assets/female-armor-staff-thrust.png',{ frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-basic-sword-walk', 'assets/male-basic-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-basic-sword-thrust', 'assets/male-basic-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('male-basic-staff-walk', 'assets/male-basic-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-basic-staff-thrust', 'assets/male-basic-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-armor-sword-walk', 'assets/male-armor-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-armor-sword-thrust', 'assets/male-armor-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('male-armor-staff-walk', 'assets/male-armor-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-armor-staff-thrust', 'assets/male-armor-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-basic-sword-walk', 'assets/female-basic-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-basic-sword-thrust', 'assets/female-basic-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('female-basic-staff-walk', 'assets/female-basic-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-basic-staff-thrust', 'assets/female-basic-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-armor-sword-walk', 'assets/female-armor-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-armor-sword-thrust', 'assets/female-armor-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('female-armor-staff-walk', 'assets/female-armor-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-armor-staff-thrust', 'assets/female-armor-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
 
         // Load the spell effect sprite sheet (https://opengameart.org/content/music-magic-effect)
-        this.load.spritesheet('music', 'assets/music_orig1.png',{ frameWidth: 150, frameHeight: 150 });
+        this.load.spritesheet('music', 'assets/music_orig1.png', { frameWidth: 150, frameHeight: 150 });
         //Paint your own: https://www.piskelapp.com/p/create/sprite/
     }
 
-    create ()
-    {
+    create() {
         this.camera = this.cameras.main;
         this.camera.setBackgroundColor(0x00ff00);
 
@@ -70,7 +66,7 @@ export class Demo1 extends Scene
             align: 'center'
         });
         this.msg_text.setOrigin(0);
-        
+
         this.exit_text = this.add.text(900, 700, 'Exit', {
             fontFamily: 'Arial Black', fontSize: 38, color: COLORS.uiText,
             stroke: COLORS.uiTextBorder, strokeThickness: 8,
@@ -80,7 +76,7 @@ export class Demo1 extends Scene
         this.exit_text.setInteractive({ useHandCursor: true });
         this.exit_text.on('pointerdown', () => {
             this.scene.start('MainMenu');
-        });        
+        });
 
         // Create all animations separately so the create() method stays concise.
         createAnimations(this);
@@ -98,7 +94,7 @@ export class Demo1 extends Scene
 
         // Helper function to create a nice button
         const createButton = (y: number, x: number, text: string, callback: () => void) => {
-            const button = this.add.text(centerX + 220 + x*150, 50 +  y*60, text, {
+            const button = this.add.text(centerX + 220 + x * 150, 50 + y * 60, text, {
                 fontFamily: 'Arial',
                 fontSize: '22px',
                 color: COLORS.buttonText,
@@ -125,29 +121,28 @@ export class Demo1 extends Scene
             return button;
         };
 
-        createButton(0 ,0, 'Male', () => {
-            this.playerSex='male';
+        createButton(0, 0, 'Male', () => {
+            this.playerSex = 'male';
         });
-        createButton(0 ,1, 'Female', () => {
-            this.playerSex='female';
+        createButton(0, 1, 'Female', () => {
+            this.playerSex = 'female';
         });
-        createButton(1 ,0, 'Basic', () => {
-            this.playerGear='basic';
+        createButton(1, 0, 'Basic', () => {
+            this.playerGear = 'basic';
         });
-        createButton(1 ,1, 'Armor', () => {
-            this.playerGear='armor';
+        createButton(1, 1, 'Armor', () => {
+            this.playerGear = 'armor';
         });
-        createButton(2 ,0, 'Staff', () => {
-            this.playerWeapon='staff';
+        createButton(2, 0, 'Staff', () => {
+            this.playerWeapon = 'staff';
         });
-        createButton(2 ,1, 'Sword', () => {
-            this.playerWeapon='sword';
+        createButton(2, 1, 'Sword', () => {
+            this.playerWeapon = 'sword';
         });
 
     }
 
-    update()
-    {
+    update() {
         const speed = 200;
         let vx = 0;
         let vy = 0;
@@ -157,7 +152,7 @@ export class Demo1 extends Scene
         if (this.cursors.right.isDown || this.wasd.D.isDown) vx = speed;
         if (this.cursors.up.isDown || this.wasd.W.isDown) vy = -speed;
         if (this.cursors.down.isDown || this.wasd.S.isDown) vy = speed;
-        if(vx !== 0 || vy !== 0){
+        if (vx !== 0 || vy !== 0) {
             this.oldvx = vx;
             this.oldvy = vy;
         }
@@ -173,18 +168,18 @@ export class Demo1 extends Scene
         if (Phaser.Input.Keyboard.JustDown(this.wasd.Q) && !this.isAttacking) {
             this.isAttacking = true;
             this.player.setVelocity(0, 0);
-            
+
             // Play thrust animation
             this.player.anims.play(`${this.playerSex}-${this.playerGear}-${this.playerWeapon}-thrust-${this.lastDirection}`, true);
-            
+
             // Create spell effect
-            const spell = this.add.sprite(this.player.x + this.oldvx/10, this.player.y + this.oldvy/10, 'music').setScale(0.5).setOrigin(0.5, 0.5);
+            const spell = this.add.sprite(this.player.x + this.oldvx / 10, this.player.y + this.oldvy / 10, 'music').setScale(0.5).setOrigin(0.5, 0.5);
             spell.texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
             spell.play('cast');
             this.tweens.add({
                 targets: spell,
-                x: spell.x + this.oldvx/3,
-                y: spell.y + this.oldvy/3,
+                x: spell.x + this.oldvx / 3,
+                y: spell.y + this.oldvy / 3,
                 duration: 600,
                 ease: 'Sine.easeOut',
                 onComplete: () => spell.destroy()
@@ -192,7 +187,7 @@ export class Demo1 extends Scene
             spell.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
                 spell.destroy();
             });
-            
+
             // Reset attacking flag when thrust animation completes
             this.player.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
                 this.isAttacking = false;

@@ -231,7 +231,7 @@ export function createAnimations(scene: Scene) {
         frames: anims.generateFrameNumbers('male-armor-sword-thrust', { start: 18, end: 23 }),
         frameRate: 14,
         repeat: 1
-    });        
+    });
     //male-armor-staff-thrust
     anims.create({
         key: 'male-armor-staff-thrust-up',
@@ -417,37 +417,37 @@ export function createAnimations(scene: Scene) {
 
     // Idle = first frame of each direction
     //male
-    anims.create({ key: 'male-armor-sword-idle-up',  frames: [{ key: 'male-armor-sword-walk', frame: 0 }],  frameRate: 10 });
-    anims.create({ key: 'male-armor-sword-idle-left',  frames: [{ key: 'male-armor-sword-walk', frame: 13 }],  frameRate: 10 });
-    anims.create({ key: 'male-armor-sword-idle-down', frames: [{ key: 'male-armor-sword-walk', frame: 26 }],  frameRate: 10 });
-    anims.create({ key: 'male-armor-sword-idle-right',    frames: [{ key: 'male-armor-sword-walk', frame: 39 }], frameRate: 10 });
-    anims.create({ key: 'male-armor-staff-idle-up',  frames: [{ key: 'male-armor-staff-walk', frame: 0 }],  frameRate: 10 });
-    anims.create({ key: 'male-armor-staff-idle-left',  frames: [{ key: 'male-armor-staff-walk', frame: 13 }],  frameRate: 10 });
-    anims.create({ key: 'male-armor-staff-idle-down', frames: [{ key: 'male-armor-staff-walk', frame: 26 }],  frameRate: 10 });
-    anims.create({ key: 'male-armor-staff-idle-right',    frames: [{ key: 'male-armor-staff-walk', frame: 39 }], frameRate: 10 });
-    anims.create({ key: 'male-basic-sword-idle-up',  frames: [{ key: 'male-basic-sword-walk', frame: 0 }],  frameRate: 10 });
-    anims.create({ key: 'male-basic-sword-idle-left',  frames: [{ key: 'male-basic-sword-walk', frame: 13 }],  frameRate: 10 });
-    anims.create({ key: 'male-basic-sword-idle-down', frames: [{ key: 'male-basic-sword-walk', frame: 26 }],  frameRate: 10 });
-    anims.create({ key: 'male-basic-sword-idle-right',    frames: [{ key: 'male-basic-sword-walk', frame: 39 }], frameRate: 10 });
-    anims.create({ key: 'male-basic-staff-idle-up',  frames: [{ key: 'male-basic-staff-walk', frame: 0 }],  frameRate: 10 });
-    anims.create({ key: 'male-basic-staff-idle-left',  frames: [{ key: 'male-basic-staff-walk', frame: 13 }],  frameRate: 10 });
-    anims.create({ key: 'male-basic-staff-idle-down', frames: [{ key: 'male-basic-staff-walk', frame: 26 }],  frameRate: 10 });
-    anims.create({ key: 'male-basic-staff-idle-right',    frames: [{ key: 'male-basic-staff-walk', frame: 39 }], frameRate: 10 });
+    anims.create({ key: 'male-armor-sword-idle-up', frames: [{ key: 'male-armor-sword-walk', frame: 0 }], frameRate: 10 });
+    anims.create({ key: 'male-armor-sword-idle-left', frames: [{ key: 'male-armor-sword-walk', frame: 13 }], frameRate: 10 });
+    anims.create({ key: 'male-armor-sword-idle-down', frames: [{ key: 'male-armor-sword-walk', frame: 26 }], frameRate: 10 });
+    anims.create({ key: 'male-armor-sword-idle-right', frames: [{ key: 'male-armor-sword-walk', frame: 39 }], frameRate: 10 });
+    anims.create({ key: 'male-armor-staff-idle-up', frames: [{ key: 'male-armor-staff-walk', frame: 0 }], frameRate: 10 });
+    anims.create({ key: 'male-armor-staff-idle-left', frames: [{ key: 'male-armor-staff-walk', frame: 13 }], frameRate: 10 });
+    anims.create({ key: 'male-armor-staff-idle-down', frames: [{ key: 'male-armor-staff-walk', frame: 26 }], frameRate: 10 });
+    anims.create({ key: 'male-armor-staff-idle-right', frames: [{ key: 'male-armor-staff-walk', frame: 39 }], frameRate: 10 });
+    anims.create({ key: 'male-basic-sword-idle-up', frames: [{ key: 'male-basic-sword-walk', frame: 0 }], frameRate: 10 });
+    anims.create({ key: 'male-basic-sword-idle-left', frames: [{ key: 'male-basic-sword-walk', frame: 13 }], frameRate: 10 });
+    anims.create({ key: 'male-basic-sword-idle-down', frames: [{ key: 'male-basic-sword-walk', frame: 26 }], frameRate: 10 });
+    anims.create({ key: 'male-basic-sword-idle-right', frames: [{ key: 'male-basic-sword-walk', frame: 39 }], frameRate: 10 });
+    anims.create({ key: 'male-basic-staff-idle-up', frames: [{ key: 'male-basic-staff-walk', frame: 0 }], frameRate: 10 });
+    anims.create({ key: 'male-basic-staff-idle-left', frames: [{ key: 'male-basic-staff-walk', frame: 13 }], frameRate: 10 });
+    anims.create({ key: 'male-basic-staff-idle-down', frames: [{ key: 'male-basic-staff-walk', frame: 26 }], frameRate: 10 });
+    anims.create({ key: 'male-basic-staff-idle-right', frames: [{ key: 'male-basic-staff-walk', frame: 39 }], frameRate: 10 });
     //female
-    anims.create({ key: 'female-armor-sword-idle-up',  frames: [{ key: 'female-armor-sword-walk', frame: 0 }],  frameRate: 10 });
-    anims.create({ key: 'female-armor-sword-idle-left',  frames: [{ key: 'female-armor-sword-walk', frame: 13 }],  frameRate: 10 });
-    anims.create({ key: 'female-armor-sword-idle-down', frames: [{ key: 'female-armor-sword-walk', frame: 26 }],  frameRate: 10 });
-    anims.create({ key: 'female-armor-sword-idle-right',    frames: [{ key: 'female-armor-sword-walk', frame: 39 }], frameRate: 10 });
-    anims.create({ key: 'female-armor-staff-idle-up',  frames: [{ key: 'female-armor-staff-walk', frame: 0 }],  frameRate: 10 });
-    anims.create({ key: 'female-armor-staff-idle-left',  frames: [{ key: 'female-armor-staff-walk', frame: 13 }],  frameRate: 10 });
-    anims.create({ key: 'female-armor-staff-idle-down', frames: [{ key: 'female-armor-staff-walk', frame: 26 }],  frameRate: 10 });
-    anims.create({ key: 'female-armor-staff-idle-right',    frames: [{ key: 'female-armor-staff-walk', frame: 39 }], frameRate: 10 });
-    anims.create({ key: 'female-basic-sword-idle-up',  frames: [{ key: 'female-basic-sword-walk', frame: 0 }],  frameRate: 10 });
-    anims.create({ key: 'female-basic-sword-idle-left',  frames: [{ key: 'female-basic-sword-walk', frame: 13 }],  frameRate: 10 });
-    anims.create({ key: 'female-basic-sword-idle-down', frames: [{ key: 'female-basic-sword-walk', frame: 26 }],  frameRate: 10 });
-    anims.create({ key: 'female-basic-sword-idle-right',    frames: [{ key: 'female-basic-sword-walk', frame: 39 }], frameRate: 10 });
-    anims.create({ key: 'female-basic-staff-idle-up',  frames: [{ key: 'female-basic-staff-walk', frame: 0 }],  frameRate: 10 });
-    anims.create({ key: 'female-basic-staff-idle-left',  frames: [{ key: 'female-basic-staff-walk', frame: 13 }],  frameRate: 10 });
-    anims.create({ key: 'female-basic-staff-idle-down', frames: [{ key: 'female-basic-staff-walk', frame: 26 }],  frameRate: 10 });
-    anims.create({ key: 'female-basic-staff-idle-right',    frames: [{ key: 'female-basic-staff-walk', frame: 39 }], frameRate: 10 });
+    anims.create({ key: 'female-armor-sword-idle-up', frames: [{ key: 'female-armor-sword-walk', frame: 0 }], frameRate: 10 });
+    anims.create({ key: 'female-armor-sword-idle-left', frames: [{ key: 'female-armor-sword-walk', frame: 13 }], frameRate: 10 });
+    anims.create({ key: 'female-armor-sword-idle-down', frames: [{ key: 'female-armor-sword-walk', frame: 26 }], frameRate: 10 });
+    anims.create({ key: 'female-armor-sword-idle-right', frames: [{ key: 'female-armor-sword-walk', frame: 39 }], frameRate: 10 });
+    anims.create({ key: 'female-armor-staff-idle-up', frames: [{ key: 'female-armor-staff-walk', frame: 0 }], frameRate: 10 });
+    anims.create({ key: 'female-armor-staff-idle-left', frames: [{ key: 'female-armor-staff-walk', frame: 13 }], frameRate: 10 });
+    anims.create({ key: 'female-armor-staff-idle-down', frames: [{ key: 'female-armor-staff-walk', frame: 26 }], frameRate: 10 });
+    anims.create({ key: 'female-armor-staff-idle-right', frames: [{ key: 'female-armor-staff-walk', frame: 39 }], frameRate: 10 });
+    anims.create({ key: 'female-basic-sword-idle-up', frames: [{ key: 'female-basic-sword-walk', frame: 0 }], frameRate: 10 });
+    anims.create({ key: 'female-basic-sword-idle-left', frames: [{ key: 'female-basic-sword-walk', frame: 13 }], frameRate: 10 });
+    anims.create({ key: 'female-basic-sword-idle-down', frames: [{ key: 'female-basic-sword-walk', frame: 26 }], frameRate: 10 });
+    anims.create({ key: 'female-basic-sword-idle-right', frames: [{ key: 'female-basic-sword-walk', frame: 39 }], frameRate: 10 });
+    anims.create({ key: 'female-basic-staff-idle-up', frames: [{ key: 'female-basic-staff-walk', frame: 0 }], frameRate: 10 });
+    anims.create({ key: 'female-basic-staff-idle-left', frames: [{ key: 'female-basic-staff-walk', frame: 13 }], frameRate: 10 });
+    anims.create({ key: 'female-basic-staff-idle-down', frames: [{ key: 'female-basic-staff-walk', frame: 26 }], frameRate: 10 });
+    anims.create({ key: 'female-basic-staff-idle-right', frames: [{ key: 'female-basic-staff-walk', frame: 39 }], frameRate: 10 });
 }
