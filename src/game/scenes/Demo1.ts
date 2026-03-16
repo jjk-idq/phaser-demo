@@ -533,7 +533,7 @@ export class Demo1 extends Scene
 
         this.player = this.physics.add.sprite(centerX, centerY, `${this.playerSex}-${this.playerGear}-${this.playerWeapon}-walk`, 0);
         this.player.setCollideWorldBounds(true);
-        this.player.anims.play(`${this.playerSex}-${this.playerGear}-${this.playerWeapon}-down`);
+        this.player.anims.play(`${this.playerSex}-${this.playerGear}-${this.playerWeapon}-idle-down`);
 
         // Input (arrows + WASD)
         this.cursors = this.input.keyboard!.createCursorKeys();
