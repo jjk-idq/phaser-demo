@@ -20,6 +20,7 @@ export class Demo2 extends Scene
     private isFalling: boolean = false;
     private playerCollider!: Phaser.Physics.Arcade.Collider;
     private gameOverText!: Phaser.GameObjects.Text;
+    private gameOverShown: boolean = false;
 
     constructor ()
     {
@@ -251,13 +252,17 @@ export class Demo2 extends Scene
             this.player.setVelocity(vx, vy);
         } else {
             this.isFalling = true;
-            this.player.setVelocity(vx, 200); // fall down
+            this.player.setVelocity(vx, 300); // fall down
         }
 
-        // If just started falling, disable collision and show Game Over
-        if (this.isFalling && !wasFalling) {
+        // If just started falling, disable collision and show Game Over after delay
+        if (!this.gameOverShown && this.isFalling && !wasFalling) {
             this.playerCollider.destroy();
-            this.gameOverText.setVisible(true);
+            this.camera.stopFollow();
+            this.time.delayedCall(5000, () => {
+                this.gameOverText.setVisible(true);
+            });
+            this.gameOverShown = true;
         }
         
         // Animation
