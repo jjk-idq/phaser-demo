@@ -6,9 +6,14 @@ const COLORS = {
     buttonHoverBg: '#555555',
 };
 
+type SavedTile = {
+    x: number;
+    y: number;
+    index: number;
+};
+
 export class Demo2 extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
-    //background: Phaser.GameObjects.Image;
     msg_text: Phaser.GameObjects.Text;
     debug_text: Phaser.GameObjects.Text;
     exit_text: Phaser.GameObjects.Text;
@@ -24,9 +29,86 @@ export class Demo2 extends Scene {
     private lastPointerX: number = 0;
     private lastPointerY: number = 0;
     private gameHasEnded: boolean = false;
-    private playerIsFaling: boolean = false;
+    private playerIsFalling: boolean = false;
     private playerIsDead: boolean = false;
     private playerFallSpeed: number = 0;
+    private mapOriginTile = { x: 0, y: 0 };
+
+    private updateLayerPosition() {
+        if (!this.layer) {
+            return;
+        }
+
+        this.layer.setPosition(
+            this.mapOriginTile.x * this.map.tileWidth,
+            this.mapOriginTile.y * this.map.tileHeight
+        );
+    }
+
+    private worldToLocalTile(worldTileX: number, worldTileY: number) {
+        return {
+            x: worldTileX - this.mapOriginTile.x,
+            y: worldTileY - this.mapOriginTile.y
+        };
+    }
+
+    private worldPositionToWorldTile(worldX: number, worldY: number) {
+        return {
+            x: Math.floor(worldX / this.map.tileWidth),
+            y: Math.floor(worldY / this.map.tileHeight)
+        };
+    }
+
+    private ensureMapContainsLocalTile(localTileX: number, localTileY: number) {
+        if (!this.layer) {
+            return { x: localTileX, y: localTileY };
+        }
+
+        const shiftX = localTileX < 0 ? -localTileX : 0;
+        const shiftY = localTileY < 0 ? -localTileY : 0;
+
+        if (shiftX > 0 || shiftY > 0) {
+            const existingTiles = this.layer
+                .getTilesWithin(0, 0, this.map.width, this.map.height)
+                .filter(tile => tile.index !== -1)
+                .map(tile => ({ x: tile.x, y: tile.y, index: tile.index }));
+
+            const targetLocalX = localTileX + shiftX;
+            const targetLocalY = localTileY + shiftY;
+            const nextWidth = Math.max(this.map.width + shiftX, targetLocalX + 1);
+            const nextHeight = Math.max(this.map.height + shiftY, targetLocalY + 1);
+
+            this.map.width = nextWidth;
+            this.map.height = nextHeight;
+            this.layer.setSize(nextWidth, nextHeight);
+            this.layer.fill(-1);
+
+            existingTiles.forEach(tile => {
+                this.layer!.putTileAt(tile.index, tile.x + shiftX, tile.y + shiftY);
+            });
+
+            this.mapOriginTile.x -= shiftX;
+            this.mapOriginTile.y -= shiftY;
+            this.updateLayerPosition();
+
+            return { x: targetLocalX, y: targetLocalY };
+        }
+
+        let expanded = false;
+        if (localTileX >= this.map.width) {
+            this.map.width = localTileX + 1;
+            expanded = true;
+        }
+        if (localTileY >= this.map.height) {
+            this.map.height = localTileY + 1;
+            expanded = true;
+        }
+        if (expanded) {
+            this.layer.setSize(this.map.width, this.map.height);
+        }
+
+        return { x: localTileX, y: localTileY };
+    }
 
     constructor() {
         super('Demo2');
@@ -37,7 +119,6 @@ export class Demo2 extends Scene {
         this.load.spritesheet('player-walk', 'assets/male-basic-none-walk.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('player-jump', 'assets/player-jump.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('player-death', 'assets/player-death.png', { frameWidth: 64, frameHeight: 64 });
-
     }
 
     create() {
@@ -48,7 +129,7 @@ export class Demo2 extends Scene {
 
         // Reset state
         this.gameHasEnded = false;
-        this.playerIsFaling = false;
+        this.playerIsFalling = false;
         this.playerIsDead = false;
         this.playerFallSpeed = 0;
 
@@ -64,6 +145,10 @@ export class Demo2 extends Scene {
             console.error('Failed to create layer');
             return;
         }
+
+        this.mapOriginTile.x = 0;
+        this.mapOriginTile.y = 0;
+        this.updateLayerPosition();
 
         // Place the first  tiles around the player starting position
         this.layer.putTileAt(1, 7, 5);
@@ -86,28 +171,14 @@ export class Demo2 extends Scene {
                 return;
             }
             const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-            const tileX = this.map.worldToTileX(worldPoint.x);
-            const tileY = this.map.worldToTileY(worldPoint.y);
-            if (tileX !== null && tileY !== null) {
-                // Expand map if necessary
-                let expanded = false;
-                if (tileX >= this.map.width) {
-                    this.map.width = tileX + 1;
-                    expanded = true;
-                }
-                if (tileY >= this.map.height) {
-                    this.map.height = tileY + 1;
-                    expanded = true;
-                }
-                if (expanded) {
-                    this.layer!.setSize(this.map.width, this.map.height);
-                }
+            const worldTile = this.worldPositionToWorldTile(worldPoint.x, worldPoint.y);
+            const localTarget = this.worldToLocalTile(worldTile.x, worldTile.y);
+            const ensuredTarget = this.ensureMapContainsLocalTile(localTarget.x, localTarget.y);
 
-                const existingTile = this.layer!.getTileAt(tileX, tileY);
-                if (!existingTile || existingTile.index === -1) {
-                    const tileIndex = Phaser.Math.Between(0, 8);
-                    this.layer!.putTileAt(tileIndex, tileX, tileY);
-                }
+            const existingTile = this.layer!.getTileAt(ensuredTarget.x, ensuredTarget.y);
+            if (!existingTile || existingTile.index === -1) {
+                const tileIndex = Phaser.Math.Between(0, 8);
+                this.layer!.putTileAt(tileIndex, ensuredTarget.x, ensuredTarget.y);
             }
         });
 
@@ -238,11 +309,17 @@ export class Demo2 extends Scene {
 
             const tiles = this.layer!.getTilesWithin(0, 0, this.map.width, this.map.height).filter(tile => tile.index !== -1);
 
-            const data = tiles.map(tile => ({ x: tile.x, y: tile.y, index: tile.index }));
+            const data = tiles.map(tile => ({
+                x: tile.x + this.mapOriginTile.x,
+                y: tile.y + this.mapOriginTile.y,
+                index: tile.index
+            }));
 
             const saveData = {
                 width: this.map.width,
                 height: this.map.height,
+                originX: this.mapOriginTile.x,
+                originY: this.mapOriginTile.y,
                 tiles: data
             };
 
@@ -251,37 +328,90 @@ export class Demo2 extends Scene {
         });
         createButton(0, 1, 'Load', () => {
 
-            const saveData = JSON.parse(localStorage.getItem('demo2_tiles') || '{}');
-
-            if (!saveData.tiles) return; // No data
-
-            // Expand map to at least the saved size
-            if (saveData.width > this.map.width || saveData.height > this.map.height) {
-                this.map.width = Math.max(this.map.width, saveData.width);
-                this.map.height = Math.max(this.map.height, saveData.height);
-                this.layer!.setSize(this.map.width, this.map.height);
+            const rawSaveData = localStorage.getItem('demo2_tiles');
+            if (!rawSaveData) {
+                return;
             }
 
-            // Also check if any tile is beyond current size (though shouldn't happen)
-            let maxX = saveData.width - 1;
-            let maxY = saveData.height - 1;
-            saveData.tiles.forEach((tileData: { x: number, y: number, index: number }) => {
-                if (tileData.x > maxX) maxX = tileData.x;
-                if (tileData.y > maxY) maxY = tileData.y;
+            let parsedSaveData: unknown;
+            try {
+                parsedSaveData = JSON.parse(rawSaveData);
+            } catch {
+                return;
+            }
+
+            if (!parsedSaveData || typeof parsedSaveData !== 'object') {
+                return;
+            }
+
+            const parsedRecord = parsedSaveData as Record<string, unknown>;
+            const rawTiles = Array.isArray(parsedRecord.tiles) ? parsedRecord.tiles : [];
+            const tiles: SavedTile[] = rawTiles
+                .map((tile): SavedTile | null => {
+                    if (!tile || typeof tile !== 'object') {
+                        return null;
+                    }
+
+                    const tileRecord = tile as Record<string, unknown>;
+                    const tileX = typeof tileRecord.x === 'number' ? tileRecord.x : NaN;
+                    const tileY = typeof tileRecord.y === 'number' ? tileRecord.y : NaN;
+                    const tileIndex = typeof tileRecord.index === 'number' ? tileRecord.index : NaN;
+
+                    if (!Number.isFinite(tileX) || !Number.isFinite(tileY) || !Number.isFinite(tileIndex)) {
+                        return null;
+                    }
+
+                    return {
+                        x: Math.floor(tileX),
+                        y: Math.floor(tileY),
+                        index: Math.floor(tileIndex)
+                    };
+                })
+                .filter((tile): tile is SavedTile => tile !== null);
+
+            if (tiles.length === 0) {
+                return;
+            }
+
+            const savedOriginX = typeof parsedRecord.originX === 'number' && Number.isFinite(parsedRecord.originX)
+                ? Math.floor(parsedRecord.originX)
+                : 0;
+            const savedOriginY = typeof parsedRecord.originY === 'number' && Number.isFinite(parsedRecord.originY)
+                ? Math.floor(parsedRecord.originY)
+                : 0;
+            const savedWidth = typeof parsedRecord.width === 'number' && Number.isFinite(parsedRecord.width)
+                ? Math.max(1, Math.floor(parsedRecord.width))
+                : 1;
+            const savedHeight = typeof parsedRecord.height === 'number' && Number.isFinite(parsedRecord.height)
+                ? Math.max(1, Math.floor(parsedRecord.height))
+                : 1;
+
+            let minTileX = savedOriginX;
+            let minTileY = savedOriginY;
+            let maxTileX = savedOriginX + savedWidth - 1;
+            let maxTileY = savedOriginY + savedHeight - 1;
+
+            tiles.forEach((tileData) => {
+                if (tileData.x < minTileX) minTileX = tileData.x;
+                if (tileData.y < minTileY) minTileY = tileData.y;
+                if (tileData.x > maxTileX) maxTileX = tileData.x;
+                if (tileData.y > maxTileY) maxTileY = tileData.y;
             });
 
-            if (maxX >= this.map.width || maxY >= this.map.height) {
-                this.map.width = Math.max(this.map.width, maxX + 1);
-                this.map.height = Math.max(this.map.height, maxY + 1);
-                this.layer!.setSize(this.map.width, this.map.height);
-            }
-
+            this.map.width = Math.max(1, maxTileX - minTileX + 1);
+            this.map.height = Math.max(1, maxTileY - minTileY + 1);
+            this.layer!.setSize(this.map.width, this.map.height);
             this.layer!.fill(-1);
 
-            saveData.tiles.forEach((tileData: { x: number, y: number, index: number }) => {
+            this.mapOriginTile.x = minTileX;
+            this.mapOriginTile.y = minTileY;
+            this.updateLayerPosition();
 
-                this.layer!.putTileAt(tileData.index, tileData.x, tileData.y);
-
+            tiles.forEach((tileData) => {
+                const localTile = this.worldToLocalTile(tileData.x, tileData.y);
+                if (localTile.x >= 0 && localTile.x < this.map.width && localTile.y >= 0 && localTile.y < this.map.height) {
+                    this.layer!.putTileAt(tileData.index, localTile.x, localTile.y);
+                }
             });
 
         });
@@ -311,14 +441,14 @@ export class Demo2 extends Scene {
             this.player.setVelocity(0, 0);
             return;
         }
-        if (this.playerIsFaling) {
+        if (this.playerIsFalling) {
             this.playerFallSpeed += 40;
             vy = this.playerFallSpeed;
             this.player.setVelocity(0, vy);
             //Test is player is fallen completely out of the screen
             if (this.player.y > this.cameras.main.height + this.player.height) {
                 this.gameHasEnded = true;
-                this.playerIsFaling = false;
+                this.playerIsFalling = false;
                 this.playerFallSpeed = 0;
                 this.gameOverText.setVisible(true);
                 this.player.setVelocity(0, 0);
@@ -346,36 +476,21 @@ export class Demo2 extends Scene {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.keyQ)) {
-            if (!this.playerIsDead && !this.playerIsFaling) {
-                const playerTile = this.map.worldToTileXY(this.player.x, this.player.y);
-                if(playerTile)
-                {
-                    const targetTileX = playerTile.x + this.lastMoveDir.x;
-                    const targetTileY = playerTile.y + this.lastMoveDir.y;
-                    // Only place within 1 tile (adjacent) and if the spot is empty
-                    if (Math.abs(targetTileX - playerTile.x) <= 1 && Math.abs(targetTileY - playerTile.y) <= 1) {
-                        let expanded = false;
-                        if (targetTileX >= 0 && targetTileY >= 0) {
-                            if (targetTileX >= this.map.width) {
-                                this.map.width = targetTileX + 1;
-                                expanded = true;
-                            }
-                            if (targetTileY >= this.map.height) {
-                                this.map.height = targetTileY + 1;
-                                expanded = true;
-                            }
-                            if (expanded) {
-                                this.layer!.setSize(this.map.width, this.map.height);
-                            }
+            if (!this.playerIsDead && !this.playerIsFalling) {
+                const playerTile = this.worldPositionToWorldTile(this.player.x, this.player.y);
+                const targetTileX = playerTile.x + this.lastMoveDir.x;
+                const targetTileY = playerTile.y + this.lastMoveDir.y;
+                // Only place within 1 tile (adjacent) and if the spot is empty
+                if (Math.abs(targetTileX - playerTile.x) <= 1 && Math.abs(targetTileY - playerTile.y) <= 1) {
+                    const localTarget = this.worldToLocalTile(targetTileX, targetTileY);
+                    const ensuredTarget = this.ensureMapContainsLocalTile(localTarget.x, localTarget.y);
 
-                            const existingTile = this.layer!.getTileAt(targetTileX, targetTileY);
-                            if (!existingTile || existingTile.index === -1) {
-                                const tileIndex = 2;
-                                this.layer!.putTileAt(tileIndex, targetTileX, targetTileY);
-                            }
-                        }
+                    const existingTile = this.layer!.getTileAt(ensuredTarget.x, ensuredTarget.y);
+                    if (!existingTile || existingTile.index === -1) {
+                        const tileIndex = 2;
+                        this.layer!.putTileAt(tileIndex, ensuredTarget.x, ensuredTarget.y);
                     }
-                }                
+                }
             }
         }
 
@@ -383,23 +498,23 @@ export class Demo2 extends Scene {
         const tileBelow = this.layer!.getTileAtWorldXY(this.player.x, this.player.y + this.player.height / 2);
         this.debug_text.setText(`Player Pos: (${this.player.x.toFixed(1)}, ${this.player.y.toFixed(1)})\n` +
             `Tile Below: ${tileBelow ? `(${tileBelow.x}, ${tileBelow.y}) idx:${tileBelow.index}` : 'None'}\n` +
-            `Falling: ${this.playerIsFaling} Fall Speed: ${this.playerFallSpeed} GameEnded: ${this.gameHasEnded}\n` +
+            `Falling: ${this.playerIsFalling} Fall Speed: ${this.playerFallSpeed} GameEnded: ${this.gameHasEnded}\n` +
             `Vx: ${vx}, Vy: ${vy}\n` +
             `last click x: ${this.lastPointerX}, y: ${this.lastPointerY}\n` +
             `Use WASD to move. Q or Click to place tiles.`
         );
-        if (!this.playerIsFaling && !this.playerIsDead) {
+        if (!this.playerIsFalling && !this.playerIsDead) {
             if (tileBelow && tileBelow.index !== -1) {
-                this.playerIsFaling = false;
+                this.playerIsFalling = false;
                 this.player.setVelocity(vx, vy);
             } else {
-                this.playerIsFaling = true;
+                this.playerIsFalling = true;
                 this.player.setVelocity(vx / 2, vy - 100); // fall down
             }
         }
 
         // If just started falling, disable collision and show Game Over after delay
-        if (this.playerIsFaling && !this.gameHasEnded && !this.playerIsDead) {
+        if (this.playerIsFalling && !this.gameHasEnded && !this.playerIsDead) {
             this.playerCollider.destroy();
             this.player.setCollideWorldBounds(false);
             this.camera.stopFollow();
@@ -413,10 +528,10 @@ export class Demo2 extends Scene {
         }
 
         // Ensure player renders behind tiles while falling, and above tiles while walking.
-        this.player.setDepth(this.playerIsFaling ? -1 : 1);
+        this.player.setDepth(this.playerIsFalling ? -1 : 1);
 
         // Animation
-        if (this.playerIsFaling) {
+        if (this.playerIsFalling) {
             this.player.anims.play('player-jump', true);
         } else {
             // Moving → decide which direction to animate
