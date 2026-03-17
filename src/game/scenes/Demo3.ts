@@ -39,7 +39,7 @@ export class Demo3 extends Scene {
         this.camera.setBackgroundColor(0x11dd55);
 
         this.title_text = this.add.text(0, 0, 'Chuncked Tilemap Demo', {
-            fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
+            fontFamily: 'Arial Black', fontSize: 38, color: '#146e1f',
             stroke: '#000000', strokeThickness: 8,
             align: 'center'
         });
@@ -155,6 +155,24 @@ export class Demo3 extends Scene {
         }
     }
 
+    public getTileAtWorldXY(worldX: number, worldY: number): Phaser.Tilemaps.Tile | null {
+        const chunkX = Math.floor(worldX / (this.CHUNK_SIZE * this.TILE_SIZE));
+        const chunkY = Math.floor(worldY / (this.CHUNK_SIZE * this.TILE_SIZE));
+        const key = `${chunkX},${chunkY}`;
+
+        if (!this.chunks.has(key)) {
+            return null;
+        }
+
+        const chunk = this.chunks.get(key)!;
+        const localX = worldX - chunkX * this.CHUNK_SIZE * this.TILE_SIZE;
+        const localY = worldY - chunkY * this.CHUNK_SIZE * this.TILE_SIZE;
+        const localTileX = Math.floor(localX / this.TILE_SIZE);
+        const localTileY = Math.floor(localY / this.TILE_SIZE);
+
+        return chunk.layer.getTileAt(localTileX, localTileY);
+    }
+
     private createChunk(chunkX: number, chunkY: number): void {
         const map = this.make.tilemap({
             tileWidth: this.TILE_SIZE,
@@ -201,7 +219,7 @@ export class Demo3 extends Scene {
                 }
             }
         }
-    }  
+    }
     /** Destroys every chunk (used before loading)  */
     private destroyAllChunks(): void {
         this.chunks.forEach(chunk => {
@@ -209,7 +227,7 @@ export class Demo3 extends Scene {
             chunk.map.destroy();
         });
         this.chunks.clear();
-    }      
+    }
     private getAllSavedChunks(): SavedChunk[] {
         const savedChunks: SavedChunk[] = [];
 
@@ -255,29 +273,35 @@ export class Demo3 extends Scene {
         if (this.cursors.up.isDown || this.keys.W.isDown) playerYSpeed = -playerSpeed;
         if (this.cursors.down.isDown || this.keys.S.isDown) playerYSpeed = playerSpeed;
 
-        // Update player facing direction if moving
+        // Normalize diagonal movement speed
+        if (playerXSpeed !== 0 && playerYSpeed !== 0) {
+            const norm = playerSpeed / Math.sqrt(2);
+            playerXSpeed = playerXSpeed > 0 ? norm : -norm;
+            playerYSpeed = playerYSpeed > 0 ? norm : -norm;
+        }
+
+        // Update player facing direction if moving and play appropriate animation
         if (playerXSpeed !== 0 || playerYSpeed !== 0) {
             if (Math.abs(playerXSpeed) > Math.abs(playerYSpeed)) {
                 this.playerFacing = playerXSpeed > 0 ? 'right' : 'left';
             } else {
                 this.playerFacing = playerYSpeed > 0 ? 'down' : 'up';
             }
-        }
-
-        // Normalize diagonal movement speed
-        if (playerXSpeed !== 0 && playerYSpeed !== 0) {
-            const norm = playerSpeed / Math.sqrt(2);
-            playerXSpeed = playerXSpeed > 0 ? norm : -norm;
-            playerYSpeed = playerYSpeed > 0 ? norm : -norm;
             this.player.anims.play(`player-walk-${this.playerFacing}`, true);
         } else {
             this.player.anims.play(`player-idle-${this.playerFacing}`, true);
         }
+
         this.player.setVelocity(playerXSpeed, playerYSpeed);
 
         // Ensure player renders behind tiles while falling, and above tiles while walking.
         this.player.setDepth(this.playerIsFaling ? -1 : 1);
 
-        this.debug_text.setText(`Player x: (${this.player.x.toFixed(1)}, y:${this.player.y.toFixed(1)})\n Chunks: ${this.chunks.size}`);
+        // Check if player is on a tile
+        const tileBelow = this.getTileAtWorldXY(this.player.x, this.player.y + this.player.height / 2);
+
+        this.debug_text.setText(
+            `Player x: (${this.player.x.toFixed(1)}, y:${this.player.y.toFixed(1)})\n` +
+            `Chunks: ${this.chunks.size} Tile below: ${tileBelow ? tileBelow.index : 'none'}\n`);
     }
 }
