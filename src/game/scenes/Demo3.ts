@@ -1,20 +1,11 @@
 import { Scene } from 'phaser';
 import { createDemoAnimations } from './createDemoAnimations';
+import { SaveHelper, SavedChunk } from './SaveHelper';
 
 interface Chunk {
     map: Phaser.Tilemaps.Tilemap;
     layer: Phaser.Tilemaps.TilemapLayer;
 }
-interface SavedChunk {
-    chunkX: number;
-    chunkY: number;
-    data: number[][];        // CHUNK_SIZE x CHUNK_SIZE tile indices
-}
-interface SaveData {
-    timestamp: number;
-    chunks: SavedChunk[];
-}
-
 
 export class Demo3 extends Scene {
     private chunks: Map<string, Chunk> = new Map();
@@ -29,7 +20,6 @@ export class Demo3 extends Scene {
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
     private keys!: { [key: string]: Phaser.Input.Keyboard.Key };
     private playerFacing: 'up' | 'down' | 'left' | 'right' = 'down';
-    //private keyQ!: Phaser.Input.Keyboard.Key;
     private readonly TILESET_KEY = 'tilesheet';
 
     constructor() {
@@ -113,10 +103,12 @@ export class Demo3 extends Scene {
         };
 
         createButton(2, 'Load', () => {
-            this.loadFromLocalStorage();
+            this.saveHelper.loadFromLocalStorage();
+            //this.loadFromLocalStorage();
         });
         createButton(3, 'Save', () => {
-            this.saveToLocalStorage();
+            this.saveHelper.saveToLocalStorage();
+            //this.saveToLocalStorage();
         });
         createButton(4, 'Restart', () => {
             this.scene.restart();
@@ -127,6 +119,12 @@ export class Demo3 extends Scene {
 
         // create starting chunk and some tiles around the player
         this.placeTiles(this.player.x, this.player.y, Phaser.Math.Between(0, 8));
+
+        // Initialize SaveManager
+        this.saveHelper = new SaveHelper(
+            this.getAllSavedChunks.bind(this),
+            this.loadChunks.bind(this)
+        );
     }
 
     public placeTiles(worldX: number, worldY: number, tileIndex: number): void {
@@ -136,9 +134,7 @@ export class Demo3 extends Scene {
         this.placeTile(worldX + this.TILE_SIZE / 2, worldY + this.TILE_SIZE / 2, tileIndex);// bottom-right
     }
 
-    /**
-     * Place a tile anywhere (supports negative coords too).
-     */
+    /** Place a tile anywhere (supports negative coords too). */
     public placeTile(worldX: number, worldY: number, tileIndex: number): void {
         const chunkX = Math.floor(worldX / (this.CHUNK_SIZE * this.TILE_SIZE));
         const chunkY = Math.floor(worldY / (this.CHUNK_SIZE * this.TILE_SIZE));
@@ -185,52 +181,16 @@ export class Demo3 extends Scene {
         this.chunks.set(`${chunkX},${chunkY}`, { map, layer });
     }
 
+
     // ==================================================================
-    //  SAVE / LOAD SYSTEM
-    // ==================================================================
-
-    /** Returns the full save object (ready for JSON) */
-    private getSaveData(): SaveData {
-        const savedChunks: SavedChunk[] = [];
-
-        this.chunks.forEach((chunk, key) => {
-            const data = this.getChunkData(chunk.layer);
-            // Optional: skip completely empty chunks (uncomment if you want)
-            // if (data.every(row => row.every(tile => tile === -1))) return;
-
-            const [chunkX, chunkY] = key.split(',').map(Number);
-            savedChunks.push({ chunkX, chunkY, data });
-        });
-
-        return {
-            timestamp: Date.now(),
-            chunks: savedChunks
-        };
-    }
-
+    //  SAVE / LOAD SYSTEM  
+    private saveHelper!: SaveHelper;
     /** Extracts tile indices from a layer (fast) */
     private getChunkData(layer: Phaser.Tilemaps.TilemapLayer): number[][] {
         return layer.layer.data.map(row =>
             row.map(tile => (tile && tile.index !== -1 ? tile.index : -1))
         );
     }
-
-    /** Loads a previously saved world */
-    private loadSaveData(saveData: SaveData): void {
-        this.destroyAllChunks(); // clear current world
-
-        saveData.chunks.forEach(saved => {
-            this.createChunk(saved.chunkX, saved.chunkY);
-
-            const key = `${saved.chunkX},${saved.chunkY}`;
-            const chunk = this.chunks.get(key)!;
-
-            this.populateLayer(chunk.layer, saved.data);
-        });
-
-        console.log(`✅ Loaded ${saveData.chunks.length} chunks`);
-    }
-
     /** Fills a layer from saved 2D data */
     private populateLayer(layer: Phaser.Tilemaps.TilemapLayer, data: number[][]): void {
         for (let y = 0; y < this.CHUNK_SIZE; y++) {
@@ -241,44 +201,40 @@ export class Demo3 extends Scene {
                 }
             }
         }
-    }
-
-    /** Destroys every chunk (used before loading) */
+    }  
+    /** Destroys every chunk (used before loading)  */
     private destroyAllChunks(): void {
         this.chunks.forEach(chunk => {
             chunk.layer.destroy();
             chunk.map.destroy();
         });
         this.chunks.clear();
+    }      
+    private getAllSavedChunks(): SavedChunk[] {
+        const savedChunks: SavedChunk[] = [];
+
+        this.chunks.forEach((chunk, key) => {
+            const data = this.getChunkData(chunk.layer);
+            const [chunkX, chunkY] = key.split(',').map(Number);
+            savedChunks.push({ chunkX, chunkY, data });
+        });
+
+        return savedChunks;
     }
+    private loadChunks(savedChunks: SavedChunk[]): void {
+        this.destroyAllChunks();
 
-    // ==================================================================
-    //  PUBLIC SAVE/LOAD METHODS (use these!)
-    // ==================================================================
+        savedChunks.forEach(saved => {
+            this.createChunk(saved.chunkX, saved.chunkY);
 
-    /** Save to browser localStorage (instant) */
-    public saveToLocalStorage(): void {
-        const data = this.getSaveData();
-        localStorage.setItem('phaserTilemapSave', JSON.stringify(data));
-        console.log(`💾 Saved ${data.chunks.length} chunks to localStorage`);
+            const key = `${saved.chunkX},${saved.chunkY}`;
+            const chunk = this.chunks.get(key);
+            if (chunk) {
+                this.populateLayer(chunk.layer, saved.data);
+            }
+        });
     }
-
-    /** Load from browser localStorage */
-    public loadFromLocalStorage(): void {
-        const json = localStorage.getItem('phaserTilemapSave');
-        if (!json) {
-            console.warn('No save file found in localStorage');
-            return;
-        }
-        try {
-            const saveData: SaveData = JSON.parse(json);
-            this.loadSaveData(saveData);
-        } catch (e) {
-            console.error('Corrupted save data');
-        }
-    }
-
-
+    // ================================================================== 
 
     update() {
         const playerSpeed = 200;
