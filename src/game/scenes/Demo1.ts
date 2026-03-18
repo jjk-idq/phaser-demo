@@ -31,22 +31,78 @@ export class Demo1 extends Scene {
 
     preload() {
         // Load the sprite sheet for the player (https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator)
-        this.load.spritesheet('male-basic-sword-walk', 'assets/male-basic-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('male-basic-sword-thrust', 'assets/male-basic-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        // male, nude, none/dagger/staff/sword, walk/thrust
+        this.load.spritesheet('male-nude-none-walk', 'assets/male-nude-none-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-nude-none-thrust', 'assets/male-nude-none-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-nude-dagger-walk', 'assets/male-nnude-dagger-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-nude-dagger-thrust', 'assets/male-nnude-dagger-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-nude-staff-walk', 'assets/male-nude-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-nude-staff-thrust', 'assets/male-nude-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-nude-sword-walk', 'assets/male-nude-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-nude-sword-thrust', 'assets/male-nude-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        // male, bare, none/dagger/staff/sword, walk/thrust
+        this.load.spritesheet('male-bare-none-walk', 'assets/male-bare-none-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-bare-none-thrust', 'assets/male-bare-none-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-bare-dagger-walk', 'assets/male-bare-dagger-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-bare-dagger-thrust', 'assets/male-bare-dagger-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-bare-staff-walk', 'assets/male-bare-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-bare-staff-thrust', 'assets/male-bare-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-bare-sword-walk', 'assets/male-bare-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-bare-sword-thrust', 'assets/male-bare-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        // male, basic, none/dagger/staff/sword, walk/thrust
+        this.load.spritesheet('male-basic-none-walk', 'assets/male-basic-none-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-basic-none-thrust', 'assets/male-basic-none-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-basic-dagger-walk', 'assets/male-basic-dagger-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-basic-dagger-thrust', 'assets/male-basic-dagger-thrust.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('male-basic-staff-walk', 'assets/male-basic-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('male-basic-staff-thrust', 'assets/male-basic-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('male-armor-sword-walk', 'assets/male-armor-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('male-armor-sword-thrust', 'assets/male-armor-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('male-basic-sword-walk', 'assets/male-basic-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-basic-sword-thrust', 'assets/male-basic-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        // male, armor, none/dagger/staff/sword, walk/thrust
+        this.load.spritesheet('male-armor-none-walk', 'assets/male-armor-none-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-armor-none-thrust', 'assets/male-armor-none-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-armor-dagger-walk', 'assets/male-armor-dagger-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-armor-dagger-thrust', 'assets/male-armor-dagger-thrust.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('male-armor-staff-walk', 'assets/male-armor-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('male-armor-staff-thrust', 'assets/male-armor-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('female-basic-sword-walk', 'assets/female-basic-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('female-basic-sword-thrust', 'assets/female-basic-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('male-armor-sword-walk', 'assets/male-armor-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('male-armor-sword-thrust', 'assets/male-armor-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        // female, nude, none/dagger/staff/sword, walk/thrust
+        this.load.spritesheet('female-nude-none-walk', 'assets/female-nude-none-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-nude-none-thrust', 'assets/female-nude-none-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-nude-dagger-walk', 'assets/female-nnude-dagger-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-nude-dagger-thrust', 'assets/female-nnude-dagger-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-nude-staff-walk', 'assets/female-nude-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-nude-staff-thrust', 'assets/female-nude-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-nude-sword-walk', 'assets/female-nude-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-nude-sword-thrust', 'assets/female-nude-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        // female, bare, none/dagger/staff/sword, walk/thrust
+        this.load.spritesheet('female-bare-none-walk', 'assets/female-bare-none-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-bare-none-thrust', 'assets/female-bare-none-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-bare-dagger-walk', 'assets/female-bare-dagger-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-bare-dagger-thrust', 'assets/female-bare-dagger-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-bare-staff-walk', 'assets/female-bare-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-bare-staff-thrust', 'assets/female-bare-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-bare-sword-walk', 'assets/female-bare-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-bare-sword-thrust', 'assets/female-bare-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        // female, basic, none/dagger/staff/sword, walk/thrust
+        this.load.spritesheet('female-basic-none-walk', 'assets/female-basic-none-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-basic-none-thrust', 'assets/female-basic-none-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-basic-dagger-walk', 'assets/female-basic-dagger-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-basic-dagger-thrust', 'assets/female-basic-dagger-thrust.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('female-basic-staff-walk', 'assets/female-basic-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('female-basic-staff-thrust', 'assets/female-basic-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('female-armor-sword-walk', 'assets/female-armor-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('female-armor-sword-thrust', 'assets/female-armor-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        this.load.spritesheet('female-basic-sword-walk', 'assets/female-basic-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-basic-sword-thrust', 'assets/female-basic-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
+        // female, armor, none/dagger/staff/sword, walk/thrust
+        this.load.spritesheet('female-armor-none-walk', 'assets/female-armor-none-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-armor-none-thrust', 'assets/female-armor-none-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-armor-dagger-walk', 'assets/female-armor-dagger-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-armor-dagger-thrust', 'assets/female-armor-dagger-thrust.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('female-armor-staff-walk', 'assets/female-armor-staff-walk.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('female-armor-staff-thrust', 'assets/female-armor-staff-thrust.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-armor-sword-walk', 'assets/female-armor-sword-walk.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('female-armor-sword-thrust', 'assets/female-armor-sword-thrust128.png', { frameWidth: 128, frameHeight: 128 });
 
         // Load the spell effect sprite sheet (https://opengameart.org/content/music-magic-effect)
         this.load.spritesheet('music', 'assets/music_orig1.png', { frameWidth: 150, frameHeight: 150 });
@@ -94,7 +150,7 @@ export class Demo1 extends Scene {
 
         // Helper function to create a nice button
         const createButton = (y: number, x: number, text: string, callback: () => void) => {
-            const button = this.add.text(centerX + 220 + x * 150, 50 + y * 60, text, {
+            const button = this.add.text(centerX + 290 + x * 120, 50 + y * 45, text, {
                 fontFamily: 'Arial',
                 fontSize: '22px',
                 color: COLORS.buttonText,
@@ -127,11 +183,23 @@ export class Demo1 extends Scene {
         createButton(0, 1, 'Female', () => {
             this.playerSex = 'female';
         });
+        createButton(1, -2, 'Nude', () => {
+            this.playerGear = 'nude';
+        });
+        createButton(1, -1, 'Bare', () => {
+            this.playerGear = 'bare';
+        });
         createButton(1, 0, 'Basic', () => {
             this.playerGear = 'basic';
         });
         createButton(1, 1, 'Armor', () => {
             this.playerGear = 'armor';
+        });
+        createButton(2, -2, 'None', () => {
+            this.playerWeapon = 'none';
+        });
+        createButton(2, -1, 'Dagger', () => {
+            this.playerWeapon = 'dagger';
         });
         createButton(2, 0, 'Staff', () => {
             this.playerWeapon = 'staff';

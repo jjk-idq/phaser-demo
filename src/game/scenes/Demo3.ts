@@ -159,20 +159,18 @@ export class Demo3 extends Scene {
         const chunkX = Math.floor(worldX / (this.CHUNK_SIZE * this.TILE_SIZE));
         const chunkY = Math.floor(worldY / (this.CHUNK_SIZE * this.TILE_SIZE));
         const key = `${chunkX},${chunkY}`;
-
         if (!this.chunks.has(key)) {
             return null;
         }
-
         const chunk = this.chunks.get(key)!;
         const localX = worldX - chunkX * this.CHUNK_SIZE * this.TILE_SIZE;
         const localY = worldY - chunkY * this.CHUNK_SIZE * this.TILE_SIZE;
         const localTileX = Math.floor(localX / this.TILE_SIZE);
         const localTileY = Math.floor(localY / this.TILE_SIZE);
-
         return chunk.layer.getTileAt(localTileX, localTileY);
     }
 
+    /** Create a new empty chunk of tiles */
     private createChunk(chunkX: number, chunkY: number): void {
         const map = this.make.tilemap({
             tileWidth: this.TILE_SIZE,
