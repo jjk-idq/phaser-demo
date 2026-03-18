@@ -1,5 +1,18 @@
 import { Scene } from 'phaser';
 
+interface TileCollisionObject {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+interface TileCollisionData {
+    objectgroup?: {
+        objects?: TileCollisionObject[];
+    };
+}
+
 export class Demo2 extends Scene {
     camera: Phaser.Cameras.Scene2D.Camera;
     msg_text: Phaser.GameObjects.Text;
@@ -11,7 +24,8 @@ export class Demo2 extends Scene {
     layerObstacles: Phaser.Tilemaps.TilemapLayer | null;
     player!: Phaser.Physics.Arcade.Sprite;
     wasd!: { [key: string]: Phaser.Input.Keyboard.Key };
-    private playerCollider!: Phaser.Physics.Arcade.Collider;
+    private obstacleBodies!: Phaser.Physics.Arcade.StaticGroup;
+    private obstacleSprites: Phaser.GameObjects.Image[] = [];
 
     constructor() {
         super('Demo2');
@@ -52,9 +66,9 @@ export class Demo2 extends Scene {
             console.error('Failed to load rocks tileset');
             return;
         }
-        rocksTileset.tileData = (tileset.tileData || {}) as any; // make sure it exists
+        const rocksTileData = (rocksTileset.tileData || {}) as Record<number, TileCollisionData>;
         // Define custom rectangles for any tile index you want
-        (rocksTileset.tileData as any)[0] = {  // another rock / tree trunk
+        rocksTileData[0] = {  // another rock / tree trunk
             objectgroup: {
                 objects: [{
                     x: 15,
@@ -64,6 +78,7 @@ export class Demo2 extends Scene {
                 }]
             }
         };
+        rocksTileset.tileData = rocksTileData;
 
 
         this.layerDecoration = this.map.createBlankLayer('layerDecoration', rocksTileset);//7,12,18-19
@@ -78,10 +93,10 @@ export class Demo2 extends Scene {
             return;
         }
 
-        // Set depths: base at 0, rocks at 1
+        // Set base layer depths. Obstacle visuals will be rendered as sprites with y-based depth.
         this.layerGround.setDepth(0);
         this.layerDecoration.setDepth(1);
-        this.layerObstacles.setDepth(2);
+        this.layerObstacles.setVisible(false);
 
         this.msg_text = this.add.text(0, 0, 'Tile Layers', {
             fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
@@ -90,7 +105,7 @@ export class Demo2 extends Scene {
         });
         this.msg_text.setOrigin(0);
         this.msg_text.setScrollFactor(0);
-        this.msg_text.setDepth(99); // Ensure it renders above everything else
+        this.msg_text.setDepth(10000); // Ensure it renders above everything else
 
         this.debug_text = this.add.text(0, centerY * 2 - 150, 'Debug Info', {
             fontFamily: 'Arial', fontSize: 18, color: '#ffffff',
@@ -99,7 +114,7 @@ export class Demo2 extends Scene {
         });
         this.debug_text.setOrigin(0);
         this.debug_text.setScrollFactor(0);
-        this.debug_text.setDepth(99); // Ensure it renders above everything else
+        this.debug_text.setDepth(10000); // Ensure it renders above everything else
 
         this.exit_text = this.add.text(900, 700, 'Exit', {
             fontFamily: 'Arial Black', fontSize: 38, color: '#ffffff',
@@ -108,7 +123,7 @@ export class Demo2 extends Scene {
         });
         this.exit_text.setOrigin(0);
         this.exit_text.setInteractive({ useHandCursor: true });
-        this.exit_text.setDepth(99); // Ensure it renders above everything else
+        this.exit_text.setDepth(10000); // Ensure it renders above everything else
         this.exit_text.on('pointerdown', () => {
             this.scene.start('MainMenu');
         });
@@ -124,8 +139,6 @@ export class Demo2 extends Scene {
         this.anims.create({ key: 'player-idle-right', frames: [{ key: 'player-walk', frame: 39 }], frameRate: 10 });
 
         this.player = this.physics.add.sprite(centerX, centerY, 'player-walk', 0);
-        // Ensure player renders above all tiles
-        this.player.setDepth(2);
 
         //this.player.setCollideWorldBounds(true);
         this.player.anims.play('player-idle-down');
@@ -141,30 +154,82 @@ export class Demo2 extends Scene {
 
             }
         }
+
+        this.createObstacleSprites();
         
-        // Use tileData objectgroups to build collision shapes instead of full-tile collision.
-        // NOTE: calling setCollision(0) would make index 0 collide as a full tile (big bounds).
-        this.layerObstacles.setCollisionFromCollisionGroup();
+        this.createObstacleBodiesFromTileData(rocksTileset, debugGraphics);
 
-        // Debug: draw collision tiles / faces (needs to happen after tiles & collisions exist)
-        debugGraphics.clear();
-        this.map.renderDebug(debugGraphics, {
-            tileColor: null, // Color of non-colliding tiles
-            collidingTileColor: new Phaser.Display.Color(243, 134, 48, 255), // Color of colliding tiles
-            faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Color of colliding face edges
-        });
-
-        // Enable collision with tiles
-        this.playerCollider = this.physics.add.collider(this.player, this.layerObstacles);
+        // Enable collision with generated per-object hitboxes
+        this.physics.add.collider(this.player, this.obstacleBodies);
 
         // Enable Arcade Physics debug rendering for the player body.
         // Note: Phaser.Sprite does not have `renderDebug`; the debug visuals come from Arcade Physics.
         this.physics.world.createDebugGraphic();
-        this.physics.world.drawDebug = true;
+        this.physics.world.drawDebug = false;
         const body = this.player.body as Phaser.Physics.Arcade.Body;
+        body.setSize(body.width * 0.5, body.height * 0.7, true);
+        body.setOffset(body.offset.x, body.offset.y + 10);
+        this.player.setDepth(body.bottom);
         body.debugBodyColor = 0xff0000;
         body.debugShowBody = true;
 
+    }
+
+    private createObstacleBodiesFromTileData(tileset: Phaser.Tilemaps.Tileset, debugGraphics: Phaser.GameObjects.Graphics): void {
+        if (!this.layerObstacles) {
+            return;
+        }
+
+        this.obstacleBodies = this.physics.add.staticGroup();
+        debugGraphics.clear();
+        debugGraphics.lineStyle(2, 0xf38630, 1);
+
+        const tileData = (tileset.tileData || {}) as Record<number, TileCollisionData>;
+        const obstacleTiles = this.layerObstacles.filterTiles((tile: Phaser.Tilemaps.Tile) => tile.index !== -1);
+
+        obstacleTiles.forEach((tile) => {
+            const localIndex = tile.index - tileset.firstgid;
+            const collisionData = tileData[tile.index] || tileData[localIndex];
+            const objects = collisionData?.objectgroup?.objects;
+
+            if (!objects || objects.length === 0) {
+                return;
+            }
+
+            objects.forEach((obj) => {
+                if (obj.width <= 0 || obj.height <= 0) {
+                    return;
+                }
+
+                const worldX = this.layerObstacles!.x + tile.pixelX + obj.x + obj.width / 2;
+                const worldY = this.layerObstacles!.y + tile.pixelY + obj.y + obj.height / 2;
+
+                const zone = this.add.zone(worldX, worldY, obj.width, obj.height);
+                this.physics.add.existing(zone, true);
+                this.obstacleBodies.add(zone);
+
+                debugGraphics.strokeRect(worldX - obj.width / 2, worldY - obj.height / 2, obj.width, obj.height);
+            });
+        });
+    }
+
+    private createObstacleSprites(): void {
+        if (!this.layerObstacles) {
+            return;
+        }
+
+        this.obstacleSprites.forEach((sprite) => sprite.destroy());
+        this.obstacleSprites = [];
+
+        const obstacleTiles = this.layerObstacles.filterTiles((tile: Phaser.Tilemaps.Tile) => tile.index !== -1);
+
+        obstacleTiles.forEach((tile) => {
+            const worldX = this.layerObstacles!.x + tile.pixelX;
+            const worldY = this.layerObstacles!.y + tile.pixelY;
+            const sprite = this.add.image(worldX, worldY, 'rocks', tile.index).setOrigin(0, 0);
+            sprite.setDepth(worldY + tile.height);
+            this.obstacleSprites.push(sprite);
+        });
     }
 
     public placeTile(x: number, y: number): void {
@@ -200,5 +265,8 @@ export class Demo2 extends Scene {
         else if (this.wasd.W.isDown) this.player.anims.play("player-walk-up", true);
         else if (this.wasd.S.isDown) this.player.anims.play("player-walk-down", true);
         else this.player.anims.stop();
+
+        const body = this.player.body as Phaser.Physics.Arcade.Body;
+        this.player.setDepth(body.bottom);
     }
 }
