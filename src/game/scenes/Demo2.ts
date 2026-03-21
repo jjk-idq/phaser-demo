@@ -32,7 +32,6 @@ export class Demo2 extends Scene {
     }
 
     preload() {
-        // Load the sprite sheet for the player (https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator)
         this.load.spritesheet('player-walk', 'assets/player-walk.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('tilemap9', 'assets/tilemap9.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('rocks', 'assets/rocks.png', { frameWidth: 64, frameHeight: 64 });

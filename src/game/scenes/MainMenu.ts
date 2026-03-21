@@ -1,7 +1,7 @@
 import { Scene, GameObjects } from 'phaser';
 
 const COLORS = {
-    title: '#ffffff',
+    title: '#ebf7fb',
     titleStroke: '#000000',
     buttonText: '#ffffff',
     buttonBg: '#2d2d2d',
@@ -25,7 +25,7 @@ export class MainMenu extends Scene {
         const centerX = this.cameras.main.centerX;
         this.logo = this.add.image(512, 200, 'logo');
 
-        this.title = this.add.text(512, 260, 'Main JJK Menu', {
+        this.title = this.add.text(512, 120, 'JJK TypeScript Game Dev Test Suite', {
             fontFamily: 'Arial Black', fontSize: 38, color: COLORS.title,
             stroke: COLORS.titleStroke, strokeThickness: 8,
             align: 'center'
@@ -61,7 +61,7 @@ export class MainMenu extends Scene {
         };
 
         // The 3 clickable buttons
-        createButton(0 ,0, 'Player Demo', () => {
+        createButton(0 ,0, 'Player Anim.', () => {
             this.scene.start('Demo1');
         });
 
